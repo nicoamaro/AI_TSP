@@ -9,17 +9,18 @@ typedef struct {
   int* distance;
 }city;
 
-typedef struct openListNode{
+typedef struct listNode{
   int idCurrentCity;
   int totalCost;
-  struct openListNode* father;
-  struct openListNode* nextListItem;
-  struct openListNode* previousListItem;
-}openListNode;
+  int father;
+
+  struct listNode* nextListItem;
+  struct listNode* previousListItem;
+}listNode;
 
 
 void initializeCity(city* cityArray, int cityNum);
 void populateCity(city* cityArray, int cityNum, char* data);
-void TSP(city* cityArray, int cityNum, openListNode* openList, int* closedList);
-int F(openListNode* current, int costToMe);
-int H(openListNode* current);
+void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList);
+int F(listNode* current, int costToMe, int costToMyFather);
+int H(listNode* current);

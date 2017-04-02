@@ -6,7 +6,8 @@ int main(int argc, char* argv[])
   char importText[1024];
   int cityNum, len;
   char* delimiter;
-  openListNode openList;
+  listNode openList;
+  listNode closedList;
   if(argc != 2)
   {
     printf("Debe pasar el archivo como parámetro\n");
@@ -19,11 +20,11 @@ int main(int argc, char* argv[])
   cityNum = atoi(importText);
   printf("%d\n", cityNum);
   city cityArray[cityNum];
-  int closedList[cityNum];
+
   initializeCity(cityArray, cityNum);
   fgets(importText, 1024, importFile);
   populateCity(cityArray, cityNum, importText);
-  TSP(cityArray, cityNum, &openList, closedList);
+  TSP(cityArray, cityNum, &openList, &closedList);
   return 0;
 }
 
@@ -78,45 +79,71 @@ void populateCity(city* cityArray, int cityNum, char* data)
 }
 
 
-void TSP(city* cityArray, int cityNum, openListNode* openList, int* closedList)
+void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 {
-  int startNode = 0, currentNodeFatherID = 0;
-  openListNode* currentNode, *fatherNode, *previousNode;
+  int startNode = 0;
+  listNode* currentNode = openList;
+  listNode* fatherNode = openList;
+  listNode* previousNode = openList;
 
-  openList->idCurrentCity = cityArray[startNode].id;
-  openList->totalCost = 0;
-  openList->father = NULL;
-  openList-> previousListItem = NULL;
+  //Empiezo con el primer nodo
+  currentNode->idCurrentCity=cityArray[startNode].id;
+  currentNode->totalCost = 0;
+  currentNode->previousListItem = NULL;
 
-
-
-  fatherNode = openList;
-  previousNode = openList;
-
-  for(int i = 0; i < cityNum - 1; i++)
+  for(int j = 0; j < cityNum -1; j++)
   {
-    currentNode                       = malloc(sizeof(openListNode));
-    currentNode->   idCurrentCity     = cityArray[currentNodeFatherID].nextCity[i];
-    currentNode->   totalCost         = F(currentNode,cityArray[currentNodeFatherID].distance[i]);//cityArray[currentNodeFatherID].distance[i]+ fatherNode->totalcost + H() ;
+    currentNode                       = malloc(sizeof(listNode));
+    currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
+    currentNode->   totalCost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->totalCost);
 
-    currentNode->   father            = fatherNode;
     currentNode->   previousListItem  = previousNode;
+    currentNode->   nextListItem      = NULL;
     previousNode->  nextListItem      = currentNode;
-    previousNode                      = currentNode;
 
 
-
+    previousNode = currentNode;
   }
-  
+  //Hay que cerrar el nodo que se expandio
+  openList = fatherNode->nextListItem;
+  closedList = fatherNode;
+  closedList->previousListItem=NULL;
+  closedList->nextListItem=NULL;
+
+
+
+  //Termine de armar la lista de este nivel
+  //Reordenar
+  //Tachar los repetidos
+  printf("---------------------------------\n\n");
+  printf("---------Open List---------------\n");
+
+
+  currentNode = openList;
+  while (NULL != currentNode)
+  {
+    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,currentNode->father);
+    currentNode= currentNode->nextListItem;
+  }
+  printf("----------------------------------\n\n");
+  printf("---------Closed List--------------\n");
+  currentNode = closedList;
+  while (NULL != currentNode)
+  {
+    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,currentNode->father);
+    currentNode= currentNode->nextListItem;
+  }
+  printf("----------------------------------\n\n");
+
 }
 
-int F(openListNode* current, int costToMe)
+int F(listNode* current, int costToMe, int costToMyFather)
 {
-  int G = costToMe + current->father->totalCost
+  int G = costToMe + costToMyFather;
   return  G + H(current) ;
 }
 
-int H(openListNode* current)
+int H(listNode* current)
 {
   return 0;
 }
