@@ -87,16 +87,42 @@ void populateCity(city* cityArray, int cityNum, char* data)
 void TSP(city* cityArray, int cityNum, openListNode* openList, int* closedList)
 {
   int startNode = 0, currentNodeFatherID = 0;
-  openListNode* currentNode;
+  openListNode* currentNode, *fatherNode, *previousNode;
   openList->idCurrentCity = cityArray[startNode].id;
   openList->totalCost = 0;
   openList->father = NULL;
+  openList-> previousListItem = NULL;
 
+
+
+  fatherNode = openList;
+  currentNode = malloc(sizeof(openListNode));
+  previousNode = openList;
+  //openList->nextListItem = currentNode;
 
   for(int i = 0; i < cityNum - 1; i++)
   {
+
+    currentNode->idCurrentCity      = cityArray[currentNodeFatherID].nextCity[i];
+
+    currentNode->totalCost          = F(currentNode,cityArray[currentNodeFatherID].distance[i]);//cityArray[currentNodeFatherID].distance[i]+ fatherNode->totalcost + H() ;
+    currentNode-> father            = fatherNode;
+    currentNode-> previousListItem  = previousNode;
+    previousNode-> nextListItem     = currentNode;
+
+    previousNode = currentNode;
     currentNode = malloc(sizeof(openListNode));
-    currentNode->idCurrentCity = cityArray[currentNodeFatherID].nextCity[i];
-    currentNode->totalCost =
+
+
   }
+}
+
+int F(openListNode* current, int costToMe)
+{
+  return costToMe + current->father->totalCost + H(current) ;
+}
+
+int H(openListNode* current)
+{
+  return 0;
 }
