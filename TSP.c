@@ -45,17 +45,11 @@ void populateCity(city* cityArray, int cityNum, char* data)
   int distances;
   char* delimiter;
   printf("Importando distancias\n");
-
-
-
-
   printf("Cargando Array\n");
   for(int i = 0; i < cityNum - 1; i++)
   {
-   // printf("%d\n",i);
     for(int j = i + 1; j < cityNum; j++)
     {
-     // printf("%d\n",j);
       delimiter = strchr(data,';');
       *delimiter = '\0';
       distances = atoi(data);
@@ -88,6 +82,7 @@ void TSP(city* cityArray, int cityNum, openListNode* openList, int* closedList)
 {
   int startNode = 0, currentNodeFatherID = 0;
   openListNode* currentNode, *fatherNode, *previousNode;
+
   openList->idCurrentCity = cityArray[startNode].id;
   openList->totalCost = 0;
   openList->father = NULL;
@@ -96,30 +91,29 @@ void TSP(city* cityArray, int cityNum, openListNode* openList, int* closedList)
 
 
   fatherNode = openList;
-  currentNode = malloc(sizeof(openListNode));
   previousNode = openList;
-  //openList->nextListItem = currentNode;
 
   for(int i = 0; i < cityNum - 1; i++)
   {
+    currentNode                       = malloc(sizeof(openListNode));
+    currentNode->   idCurrentCity     = cityArray[currentNodeFatherID].nextCity[i];
+    currentNode->   totalCost         = F(currentNode,cityArray[currentNodeFatherID].distance[i]);//cityArray[currentNodeFatherID].distance[i]+ fatherNode->totalcost + H() ;
 
-    currentNode->idCurrentCity      = cityArray[currentNodeFatherID].nextCity[i];
+    currentNode->   father            = fatherNode;
+    currentNode->   previousListItem  = previousNode;
+    previousNode->  nextListItem      = currentNode;
+    previousNode                      = currentNode;
 
-    currentNode->totalCost          = F(currentNode,cityArray[currentNodeFatherID].distance[i]);//cityArray[currentNodeFatherID].distance[i]+ fatherNode->totalcost + H() ;
-    currentNode-> father            = fatherNode;
-    currentNode-> previousListItem  = previousNode;
-    previousNode-> nextListItem     = currentNode;
-
-    previousNode = currentNode;
-    currentNode = malloc(sizeof(openListNode));
 
 
   }
+  
 }
 
 int F(openListNode* current, int costToMe)
 {
-  return costToMe + current->father->totalCost + H(current) ;
+  int G = costToMe + current->father->totalCost
+  return  G + H(current) ;
 }
 
 int H(openListNode* current)
