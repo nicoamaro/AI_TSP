@@ -6,6 +6,7 @@ int main(int argc, char* argv[])
   char importText[1024];
   int cityNum, len;
   char* delimiter;
+  openListNode openList;
   if(argc != 2)
   {
     printf("Debe pasar el archivo como parámetro\n");
@@ -18,9 +19,11 @@ int main(int argc, char* argv[])
   cityNum = atoi(importText);
   printf("%d\n", cityNum);
   city cityArray[cityNum];
+  int closedList[cityNum];
   initializeCity(cityArray, cityNum);
   fgets(importText, 1024, importFile);
   populateCity(cityArray, cityNum, importText);
+  TSP(cityArray, cityNum, &openList, closedList);
   return 0;
 }
 
@@ -38,13 +41,13 @@ void initializeCity(city* cityArray, int cityNum)
 
 void populateCity(city* cityArray, int cityNum, char* data)
 {
-  
+
   int distances;
   char* delimiter;
   printf("Importando distancias\n");
- 
 
- 
+
+
 
   printf("Cargando Array\n");
   for(int i = 0; i < cityNum - 1; i++)
@@ -78,4 +81,22 @@ void populateCity(city* cityArray, int cityNum, char* data)
 
   return;
 
+}
+
+
+void TSP(city* cityArray, int cityNum, openListNode* openList, int* closedList)
+{
+  int startNode = 0, currentNodeFatherID = 0;
+  openListNode* currentNode;
+  openList->idCurrentCity = cityArray[startNode].id;
+  openList->totalCost = 0;
+  openList->father = NULL;
+
+
+  for(int i = 0; i < cityNum - 1; i++)
+  {
+    currentNode = malloc(sizeof(openListNode));
+    currentNode->idCurrentCity = cityArray[currentNodeFatherID].nextCity[i];
+    currentNode->totalCost =
+  }
 }

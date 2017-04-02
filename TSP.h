@@ -12,8 +12,11 @@ typedef struct {
 typedef struct {
   int idCurrentCity;
   int totalCost;
-  int* path;
-}listNode;
+  openListNode* father;
+  openListNode* nextListItem;
+}openListNode;
+
 
 void initializeCity(city* cityArray, int cityNum);
 void populateCity(city* cityArray, int cityNum, char* data);
+void TSP(city* cityArray, int cityNum, openListNode* openList, int* closedList);
