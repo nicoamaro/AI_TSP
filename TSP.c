@@ -38,39 +38,30 @@ void initializeCity(city* cityArray, int cityNum)
 
 void populateCity(city* cityArray, int cityNum, char* data)
 {
-  int arrows = cityNum*(cityNum - 1)/2;
-  int distances[arrows];
+  
+  int distances;
   char* delimiter;
   printf("Importando distancias\n");
-  for(int i = 0; i < arrows; i++)
-  {
-    delimiter = strchr(data,';');
-    *delimiter = '\0';
-    distances[i] = atoi(data);
-    data = delimiter + 1;
-  }
+ 
 
-  printf("Imprimiendo Array\n");
-  for(int i = 0; i < cityNum; i++)
-  {
-    printf("\nCiudad %d:\n", cityArray[i].id);
-    for(int j = 0; j < cityNum - 1; j++)
-    {
-  //    printf("\t Distancia a Ciudad %d: %d\n", cityArray[i].nextCity[j], cityArray[i].distance[j]);
-    }
-  }
+ 
 
   printf("Cargando Array\n");
   for(int i = 0; i < cityNum - 1; i++)
   {
-    printf("%d\n",i);
+   // printf("%d\n",i);
     for(int j = i + 1; j < cityNum; j++)
     {
-      printf("%d\n",j);
-      cityArray[i].distance[j-i-1] = distances[(i*cityNum)+(j - 1)];
-      cityArray[i].nextCity[j-i-1] = j;
+     // printf("%d\n",j);
+      delimiter = strchr(data,';');
+      *delimiter = '\0';
+      distances = atoi(data);
+      data = delimiter + 1;
 
-      cityArray[j].distance[i] = distances[((i*cityNum))+(j - 1)];
+      cityArray[i].distance[j-1] = distances;
+      cityArray[i].nextCity[j-1] = j;
+
+      cityArray[j].distance[i] = distances;
       cityArray[j].nextCity[i] = i;
     }
   }
