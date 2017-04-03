@@ -24,3 +24,7 @@ void populateCity(city* cityArray, int cityNum, char* data);
 void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList);
 int F(listNode* current, int costToMe, int costToMyFather);
 int H(listNode* current);
+void reordenarOpenList(listNode* openList);
+void switchItems(listNode* a, listNode* b);
+void printList(listNode* a);
+void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode );
