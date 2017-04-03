@@ -87,32 +87,28 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   listNode* previousNode = openList;
 
   //Empiezo con el primer nodo
-  currentNode->idCurrentCity=cityArray[startNode].id;
-  currentNode->totalCost = 0;
-  currentNode->previousListItem = NULL;
+  //Configuro el primer nodo
+  openList->idCurrentCity=cityArray[startNode].id;
+  openList->totalCost = 0;
+  openList->previousListItem = NULL;
+
 
   for(int j = 0; j < cityNum -1; j++)
   {
-
-    currentNode                       = malloc(sizeof(listNode));
-    currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
-    currentNode->   totalCost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->totalCost);
-
-    currentNode->   previousListItem  = previousNode;
-    currentNode->   nextListItem      = NULL;
-    previousNode->  nextListItem      = currentNode;
-
-
+    currentNode = malloc(sizeof(listNode));
+    agregarItem(currentNode,cityArray,cityNum,j,fatherNode,previousNode );
     previousNode = currentNode;
+
   }
   //Cierro el nodo que se expandio
+
   openList = fatherNode->nextListItem;
   closedList = fatherNode;
   closedList->previousListItem=NULL;
   closedList->nextListItem=NULL;
-  //Termine de armar la lista de este nivel
-  //Reordenar
-  //Tachar los repetidos
+
+
+
   printf("---------------------------------------------\n\n");
   printf("---------Open List Desordenada---------------\n");
   printList(openList);
@@ -120,10 +116,16 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   printf("-------------Closed List---------------------\n");
   printList(closedList);
   printf("---------------------------------------------\n\n");
-  reordenarOpenList(openList);
   printf("-----------Open List Ordenada----------------\n");
+  reordenarOpenList(openList);
   printList(openList);
   printf("---------------------------------------------\n\n");
+  printf("-----------Open List Ordenada y Tachada------\n");
+  tacharRepetidos(openList);
+  printList(openList);
+  printf("---------------------------------------------\n\n");
+  //Termine de armar la lista de este nivel
+
 
 }
 
@@ -144,11 +146,10 @@ void reordenarOpenList(listNode* openList)
   listNode *current;
 
   current = openList;
-  moving = openList->nextListItem;
 
   while(NULL!=current)
   {
-
+    moving = current->nextListItem;
     while (NULL!= moving)
     {
       if(current->totalCost > moving->totalCost)
@@ -158,10 +159,6 @@ void reordenarOpenList(listNode* openList)
       moving = moving->nextListItem;
     }
     current = current -> nextListItem;
-    if (NULL!= current)
-    {
-      moving = current->nextListItem;
-    }
   }
 }
 
@@ -214,5 +211,44 @@ void printList(listNode* a)
 
 void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode )
 {
+  currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
+  currentNode->   totalCost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->totalCost);
+  currentNode->   previousListItem  = previousNode;
+  currentNode->   nextListItem      = NULL;
+  previousNode->  nextListItem      = currentNode;
+}
 
+
+
+void tacharRepetidos(listNode* openList)
+{
+  listNode *moving;
+  listNode *current;
+
+  current = openList;
+
+
+  while(NULL!=current)
+  {
+    moving = current->nextListItem;
+    while (NULL!= moving)
+    {
+      if(current->idCurrentCity == moving->idCurrentCity)
+      {
+        borrarItem(moving);
+      }
+      moving = moving->nextListItem;
+    }
+    current = current -> nextListItem;
+  }
+}
+
+void borrarItem(listNode* a)
+{
+  a->previousListItem->nextListItem = a->nextListItem;
+  if(NULL!=a->nextListItem)
+  {
+    a->nextListItem->previousListItem = a->previousListItem;
+  }
+  //free(aux);
 }

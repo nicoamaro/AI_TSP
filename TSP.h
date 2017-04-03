@@ -28,3 +28,5 @@ void reordenarOpenList(listNode* openList);
 void switchItems(listNode* a, listNode* b);
 void printList(listNode* a);
 void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode );
+void tacharRepetidos(listNode* openList);
+void borrarItem (listNode* a);
