@@ -1,6 +1,7 @@
 #include "stdbool.h"
 #include "TSP.h"
 
+
 bool nextElementIs(listNode* element, listNode* next_element){
     return (element->nextListItem == next_element) ? true : false;
 }
