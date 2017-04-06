@@ -46,7 +46,9 @@ void switchItems(listNode* a, listNode* b)
 {
   listNode* aux= malloc (sizeof(listNode));
 
-  a->prevListItem->nextListItem = b;
+  
+
+
   (aux->nextListItem) = (a->nextListItem);
   (aux->prevListItem) = (a->prevListItem);
 
