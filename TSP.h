@@ -15,7 +15,7 @@ typedef struct listNode{
   int father;
 
   struct listNode* nextListItem;
-  struct listNode* prevListItem;
+  struct listNode* previousListItem;
 }listNode;
 
 

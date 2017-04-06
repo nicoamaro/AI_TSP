@@ -166,6 +166,10 @@ void reordenarOpenList(listNode* openList)
       moving = moving->nextListItem;
     }
     current = current -> nextListItem;
+    if(NULL != current)
+    {
+      moving = current->nextListItem;
+    }
   }
 }
 
@@ -173,7 +177,7 @@ void switchItems(listNode* a, listNode* b)
 {
   listNode* aux= malloc (sizeof(listNode));
 
-  /*aux->idCurrentCity= a->idCurrentCity;
+  aux->idCurrentCity= a->idCurrentCity;
   aux->totalCost= a->totalCost;
   aux->father = a->father;
 
@@ -184,7 +188,7 @@ void switchItems(listNode* a, listNode* b)
   b->idCurrentCity= aux->idCurrentCity;
   b->totalCost= aux->totalCost;
   b->father = aux->father;
-  */
+  /*
 
   aux->previousListItem = a->previousListItem;
   aux -> nextListItem = a->nextListItem;
@@ -203,6 +207,8 @@ void switchItems(listNode* a, listNode* b)
   //aux=a;
   //a=b;
   //b=aux;
+*/
+  free(aux);
 }
 
 void printList(listNode* a)
@@ -258,5 +264,5 @@ void borrarItem(listNode* a)
   {
     a->nextListItem->previousListItem = a->previousListItem;
   }
-  //free(aux);
+  free(a);
 }
