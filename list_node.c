@@ -1,5 +1,5 @@
 #include "stdbool.h"
-#include "TSP.h"
+#include "list_node.h"
 
 bool nextElementIs(listNode* element, listNode* next_element){
     return (element->nextListItem == next_element) ? true : false;
@@ -35,7 +35,7 @@ listNode* popItem(listNode* prev_element){
     return poped_element;
 }
 
-listNode* createItem(){
+listNode* createItem(void){
     listNode* new_item = malloc(sizeof(listNode));
     new_item->nextListItem = NULL;
     new_item->prevListItem = NULL;
@@ -48,19 +48,13 @@ listNode* newList(unsigned int list_len){
     listNode* prev_item = first_item;
 
     for(int i = 0; i < list_len; i++){
-	new_item = createItem();
-	setNextElement(prev_item, new_item);
-	setPrevElement(new_item, prev_item);
-	prev_item = new_item;
+        new_item = createItem();
+        setNextElement(prev_item, new_item);
+        setPrevElement(new_item, prev_item);
+        prev_item = new_item;
     }
 
     return first_item;
-}
-
-void test_newList(){
-}
-
-void test_setNextElement(){
 }
 
 void printList(listNode* a)
@@ -73,9 +67,6 @@ void printList(listNode* a)
   }
 }
 
-int main(int argc, char* argv[])
-{
-    test_newList();
 /*
   listNode *aux=malloc(sizeof(listNode));
   listNode *current, *prev, *openList;
@@ -114,5 +105,3 @@ int main(int argc, char* argv[])
   printf("************************\n" );
   printList(openList);
   */
-}
-
