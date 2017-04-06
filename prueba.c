@@ -1,7 +1,82 @@
+#include "stdbool.h"
 #include "TSP.h"
+
+bool nextElementIs(listNode* element, listNode* next_element){
+    return (element->nextListItem == next_element) ? true : false;
+}
+
+bool prevElementIs(listNode* element, listNode* prev_element){
+    return (element->prevListItem == prev_element) ? true : false;
+}
+
+listNode* setNextElement(listNode* element, listNode* next_element){
+    listNode* orfan_element = element->nextListItem;
+    element->nextListItem = next_element;
+    return orfan_element;
+}
+
+listNode* setPrevElement(listNode* element, listNode* prev_element){
+    listNode* orfan_element = element->prevListItem;
+    element->prevListItem = prev_element;
+    return orfan_element;
+}
+
+void putItem(listNode* element, listNode* prev_element){
+    listNode* orfan_element;
+    orfan_element = setNextElement(prev_element, element);
+    setPrevElement(orfan_element, element);
+}
+
+listNode* popItem(listNode* prev_element){
+    listNode* poped_element;
+    poped_element = setNextElement(prev_element, prev_element->nextListItem->nextListItem);
+    setPrevElement(prev_element->nextListItem->nextListItem, prev_element);
+
+    return poped_element;
+}
+
+listNode* createItem(){
+    listNode* new_item = malloc(sizeof(listNode));
+    new_item->nextListItem = NULL;
+    new_item->prevListItem = NULL;
+    return new_item;
+}
+
+listNode* newList(unsigned int list_len){
+    listNode* first_item = createItem();
+    listNode* new_item;
+    listNode* prev_item = first_item;
+
+    for(int i = 0; i < list_len; i++){
+	new_item = createItem();
+	setNextElement(prev_item, new_item);
+	setPrevElement(new_item, prev_item);
+	prev_item = new_item;
+    }
+
+    return first_item;
+}
+
+void test_newList(){
+}
+
+void test_setNextElement(){
+}
+
+void printList(listNode* a)
+{
+  listNode* currentNode = a;
+  while (NULL != currentNode)
+  {
+    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,currentNode->father);
+    currentNode= currentNode->nextListItem;
+  }
+}
 
 int main(int argc, char* argv[])
 {
+    test_newList();
+/*
   listNode *aux=malloc(sizeof(listNode));
   listNode *current, *prev, *openList;
   openList = aux;
@@ -38,76 +113,6 @@ int main(int argc, char* argv[])
   printf("a: %p, b: %p\n",openList, current );
   printf("************************\n" );
   printList(openList);
+  */
 }
 
-
-
-void switchItems(listNode* a, listNode* b)
-{
-  listNode* aux= malloc (sizeof(listNode));
-
-  
-
-
-  (aux->nextListItem) = (a->nextListItem);
-  (aux->prevListItem) = (a->prevListItem);
-
-  (a->nextListItem) = (b->nextListItem);
-  (a->prevListItem) = (b->prevListItem);
-
-  (b->nextListItem) = (aux->nextListItem);
-  (b->prevListItem) = (aux->prevListItem);
-
-
-
-  /*if (NULL!= a->nextListItem && b != a->nextListItem)
-  {
-    printf("a->nextListItem != NULL\n");
-    //a->nextListItem->prevListItem = b;
-  }
-  if (NULL!= b->nextListItem && a!= b->nextListItem)
-  {
-    printf("b->nextListItem != NULL\n");
-    b->nextListItem->prevListItem = a;
-  }
-
-  if (NULL!= a->prevListItem && b != a->prevListItem)
-  {
-    printf("a->prevListItem != NULL\n");
-    a->prevListItem->nextListItem = b->prevListItem->nextListItem;
-  }
-  if (NULL!= b->prevListItem && a != b->prevListItem)
-  {
-    printf("b->prevListItem != NULL\n");
-    //b->prevListItem->nextListItem = a;
-  }
-
-  //aux->prevListItem = a->prevListItem;
-  //aux -> nextListItem = a->nextListItem;
-
-  *a->nextListItem = b-> nextListItem;
-  //a->prevListItem = b->prevListItem;
-  *a->prevListItem = b;
-
-  *b->nextListItem = aux;
-  //b->nextListItem = aux -> nextListItem;
-  *b->prevListItem = aux -> prevListItem;
-
-
-  printf("a: %p, b: %p\n",a,b );
-  //aux = a;
-  //a = b;
-  //b = aux;
-  printf("a: %p, b: %p\n",a,b );
-*/
-}
-
-void printList(listNode* a)
-{
-  listNode* currentNode = a;
-  while (NULL != currentNode)
-  {
-    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,currentNode->father);
-    currentNode= currentNode->nextListItem;
-  }
-}
