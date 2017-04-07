@@ -12,7 +12,7 @@ typedef struct {
 typedef struct listNode{
   int idCurrentCity;
   int totalCost;
-  int father;
+  struct listNode*  father;
 
   struct listNode* nextListItem;
   struct listNode* previousListItem;

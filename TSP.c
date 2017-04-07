@@ -94,8 +94,8 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   openList->idCurrentCity=cityArray[startNode].id;
   openList->totalCost = 0;
   openList->previousListItem = NULL;
-
-  for(int i=0;i<2;i++)//for(int i=0;i<cityNum-1;i++)
+  openList->father = NULL;
+  for(int i=0;i<3;i++)//for(int i=0;i<cityNum-1;i++)
   {
     printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
     fatherNode = openList;
@@ -216,7 +216,12 @@ void printList(listNode* a)
   listNode* currentNode = a;
   while (NULL != currentNode)
   {
-    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,currentNode->father);
+    int myFather = 0;
+    if (currentNode->father != NULL)
+      {
+        myFather = currentNode->father->idCurrentCity;
+      }
+    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,myFather);
     currentNode= currentNode->nextListItem;
   }
 }
@@ -226,7 +231,7 @@ void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listN
 {
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
   currentNode->   totalCost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->totalCost);
-  currentNode->   father            = fatherNode->idCurrentCity;
+  currentNode->   father            = fatherNode;
   currentNode->   previousListItem  = previousNode;
   currentNode->   nextListItem      = NULL;
   previousNode->  nextListItem      = currentNode;
