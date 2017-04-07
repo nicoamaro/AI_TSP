@@ -12,8 +12,8 @@ typedef struct {
 typedef struct listNode{
   int idCurrentCity;
   int totalCost;
-  int father;
 
+  struct listNode* father;
   struct listNode* nextListItem;
   struct listNode* previousListItem;
 }listNode;
@@ -24,9 +24,10 @@ void populateCity(city* cityArray, int cityNum, char* data);
 void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList);
 int F(listNode* current, int costToMe, int costToMyFather);
 int H(listNode* current);
-void reordenarOpenList(listNode* openList);
+void sortList(listNode* openList);
 void switchItems(listNode* a, listNode* b);
 void printList(listNode* a);
-void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode );
-void tacharRepetidos(listNode* openList);
-void borrarItem (listNode* a);
+listNode* createItem(city* cityArray,int cityNum, int j, listNode* fatherNode);
+void addItem(listNode* item, listNode* listEnd);
+void crop(listNode* openList);
+void deleteItem(listNode* a);
