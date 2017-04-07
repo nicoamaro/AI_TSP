@@ -93,18 +93,19 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   //Configuro el primer nodo
   openList->idCurrentCity=cityArray[startNode].id;
   openList->totalCost = 0;
+  openList->father = NULL;
   openList->previousListItem = NULL;
 
-  for(int i=0;i<2;i++)//for(int i=0;i<cityNum-1;i++)
+  for(int i=0;i<5;i++)//for(int i=0;i<cityNum-1;i++)
   {
     printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
     fatherNode = openList;
-    closedList -> nextListItem = fatherNode;
+    closedList = fatherNode;
 
     for(int j = 0; j < cityNum -1; j++)
     {
       currentNode = createItem(cityArray,cityNum,j,fatherNode);
-      addItem(currentNode,previousNode);
+      addItem(currentNode,openList);
       previousNode = currentNode;
 
     }
@@ -216,12 +217,12 @@ void printList(listNode* a)
   listNode* currentNode = a;
   while (NULL != currentNode)
   {
-    int father = 0;
+    int myFather = 0;
     if(currentNode->father != NULL)
     {
-      father = currentNode->father->idCurrentCity;
+      myFather = currentNode->father->idCurrentCity;
     }
-    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost, father);
+    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost, myFather);
     currentNode= currentNode->nextListItem;
   }
 }
@@ -229,11 +230,13 @@ void printList(listNode* a)
 
 listNode* createItem(city* cityArray,int cityNum, int j, listNode* fatherNode)//, listNode* previousNode )
 {
+//  printf("creando nodo!\n");
   listNode* currentNode = malloc(sizeof(currentNode));
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
   currentNode->   totalCost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->totalCost);
   currentNode->   father            = fatherNode;
 
+  //printf("nodo creado!\n");
   return currentNode;
 }
 
