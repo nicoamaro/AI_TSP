@@ -17,15 +17,23 @@ listNode* setNextElement(listNode* element, listNode* next_element){
 }
 
 listNode* setPrevElement(listNode* element, listNode* prev_element){
-    listNode* orfan_element = element->prevListItem;
-    element->prevListItem = prev_element;
-    return orfan_element;
+    listNode* orfan_element;
+    if (NULL!= element)
+    {
+        orfan_element = element->prevListItem;
+        element->prevListItem = prev_element;
+        return orfan_element;
+    }
+    return NULL;
 }
 
 void putItem(listNode* element, listNode* prev_element){
     listNode* orfan_element;
+
     orfan_element = setNextElement(prev_element, element);
     setPrevElement(orfan_element, element);
+    setNextElement(element, orfan_element);
+    setPrevElement(element,prev_element);
 }
 
 listNode* popItem(listNode* prev_element){
@@ -43,77 +51,88 @@ listNode* createItem(){
     return new_item;
 }
 
-listNode* newList(unsigned int list_len){
+listNode* newList(unsigned int list_len)
+{
     listNode* first_item = createItem();
     listNode* new_item;
     listNode* prev_item = first_item;
 
-    for(int i = 0; i < list_len; i++){
-	new_item = createItem();
-	setNextElement(prev_item, new_item);
-	setPrevElement(new_item, prev_item);
-	prev_item = new_item;
+    for(int i = 0; i < list_len; i++)
+    {
+        new_item = createItem();
+        setNextElement(prev_item, new_item);
+        setPrevElement(new_item, prev_item);
+        prev_item = new_item;
     }
 
     return first_item;
 }
 
-void test_newList(){
+void test_newList()
+{
 }
 
-void test_setNextElement(){
+void test_setNextElement()
+{
 }
 
 void printList(listNode* a)
 {
-  listNode* currentNode = a;
-  while (NULL != currentNode)
-  {
-    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,currentNode->father);
-    currentNode= currentNode->nextListItem;
-  }
+    listNode* currentNode = a;
+    while (NULL != currentNode)
+    {
+        printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,currentNode->father);
+        currentNode= currentNode->nextListItem;
+    }
+}
+
+void reversePrintList(listNode* a)
+{
+    listNode* currentNode = a;
+    while (NULL != currentNode)
+    {
+        printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,currentNode->father);
+        currentNode= currentNode->prevListItem;
+    }
 }
 
 int main(int argc, char* argv[])
 {
-    test_newList();
-/*
-  listNode *aux=malloc(sizeof(listNode));
-  listNode *current, *prev, *openList;
-  openList = aux;
-
-  openList -> idCurrentCity    = 0;
-  openList -> totalCost        = 0;
-  openList -> father           = 0;
-
-  openList -> nextListItem     = NULL;
-  openList -> prevListItem     = NULL;
-
-  prev=openList;
+    listNode *a = createItem();
+    listNode *b = createItem();
+    listNode *c = createItem();
+    listNode *d = createItem();
+    listNode *e = createItem();
 
 
-  for (int i=1;i<5;i++)
-  {
-    current = malloc(sizeof(listNode));
-    current -> idCurrentCity    = i;
-    current -> totalCost        = i*i;
-    current -> father           = i*i*i;
+    a->totalCost = 1;
+    b->totalCost = 2;
+    c->totalCost = 3;
+    d->totalCost = 4;
+    e->totalCost = 10;
 
-    current -> nextListItem     = NULL;
-    current -> prevListItem     = prev;
-    prev-> nextListItem         = current;
+    setNextElement(a,b);
+    setNextElement(b,c);
+    setNextElement(c,d);
 
-    prev = current;
+    setPrevElement(d,c);
+    setPrevElement(c,b);
+    setPrevElement(b,a);
 
-  }
-  printList(openList);
-  printf("************************\n" );
-  printf("probando 2do elemento contra ultimo\n");
-  printf("a: %p, b: %p\n",openList, current );
-  switchItems(current->prevListItem->prevListItem, current->prevListItem);
-  printf("a: %p, b: %p\n",openList, current );
-  printf("************************\n" );
-  printList(openList);
-  */
+
+    printf("----------------------\n");
+    printList(a);
+    printf("----------------------\n");
+    reversePrintList(d);
+    printf("----------------------\n");
+    printf("**********************\n");
+
+    putItem(e,d);
+
+    printf("----------------------\n");
+    printList(a);
+    printf("----------------------\n");
+    reversePrintList(e);
+    printf("----------------------\n");
+
 }
-
