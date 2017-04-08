@@ -111,7 +111,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   //Empiezo con el primer nodo
   //Configuro el primer nodo Lista abierta
   openList->idCurrentCity=cityArray[startNode].id;
-  openList->totalCost = 0;
+  openList->cost = 0;
   openList->heuristic = minDistance;
   openList->previousListItem = NULL;
   openList->nextListItem = NULL;
@@ -157,7 +157,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         //printf("------------------------------------------------------\n\n");
         //printf("---------Closed  List Desordenada nivel %d----------------\n",i+1);
         //printList(closedList);
-        printf("Total COST = %d\n",openList->totalCost);
+        printf("Total COST = %d\n",openList->cost);
         printf("Path: ");
         while(depth)
           {
@@ -229,7 +229,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     //printf("---------Open List Desordenada nivel %d----------------\n",i+1);
     //printList(openList);
     //printf("------------------------------------------------------\n\n");
-    //printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
+    // printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
     reordenarOpenList(openList);
     //printList(openList);
     //printf("------------------------------------------------------\n\n");
@@ -254,23 +254,22 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 int F(listNode* current, int costToMe, int costToMyFather)
 {
   int G = costToMe + costToMyFather;
-  for(int i = 0; i < depth-1; i++)
-    {
-      G += ;
-    }
   return  G;// + H(current) ;
 }
 
 int H(int* dist, int minDistance, int depth, int* path)
 {
+  #ifdef HEURISTICS_ON
+  //printf("HEURISTICA\n");
   int h = minDistance;
-  printf("LLEGUE H=%d, depth=%d\n",h, depth);
-  for(int i = 0; i < depth-1; i++)
+  for(int i = 0; i < depth; i++)
     {
       h -= dist[path[i]];
     }
-  printf("h = %d\n",h);
   return (h);
+#endif /* CON HEURISTICA */
+  return 0;
+  
 }
 
 void reordenarOpenList(listNode* openList)
@@ -285,7 +284,7 @@ void reordenarOpenList(listNode* openList)
     moving = current->nextListItem;
     while (NULL!= moving)
     {
-      if(current->totalCost > moving->totalCost)
+      if(current->cost+current->heuristic  > moving->cost+moving->heuristic)
       {
 
         switchItems(current, moving);
@@ -305,15 +304,18 @@ void switchItems(listNode* a, listNode* b)
   listNode* aux= malloc (sizeof(listNode));
 
   aux->idCurrentCity= a->idCurrentCity;
-  aux->totalCost= a->totalCost;
+  aux->cost= a->cost;
+  aux->heuristic = a->heuristic;
   aux->father = a->father;
 
   a->idCurrentCity= b->idCurrentCity;
-  a->totalCost= b->totalCost;
+  a->cost= b->cost;
+  a->heuristic = b->heuristic;
   a->father = b->father;
 
   b->idCurrentCity= aux->idCurrentCity;
-  b->totalCost= aux->totalCost;
+  b->cost= aux->cost;
+  b->heuristic = aux->heuristic;
   b->father = aux->father;
   /*
 
@@ -348,7 +350,7 @@ void printList(listNode* a)
       {
         myFather = currentNode->father->idCurrentCity;
       }
-    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,myFather);
+    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->cost+currentNode->heuristic,myFather);
     currentNode= currentNode->nextListItem;
   }
 }
@@ -357,8 +359,9 @@ void printList(listNode* a)
 void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode, int *dist,  int minDistance, int depth, int* path )
 {
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
-  //currentNode->   totalCost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->totalCost);
-  currentNode->   totalCost         = fatherNode->totalCost + cityArray[fatherNode->idCurrentCity].distance[j] + H(dist, minDistance, depth, path);
+  //currentNode->   cost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->cost);
+  currentNode->   cost         = fatherNode->cost + cityArray[fatherNode->idCurrentCity].distance[j];
+  currentNode->   heuristic         =  H(dist, minDistance, depth, path);
   currentNode->   father            = fatherNode;
   currentNode->   previousListItem  = previousNode;
   currentNode->   nextListItem      = NULL;

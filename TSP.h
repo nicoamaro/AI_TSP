@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define HEURISTICS_ON
 
 typedef struct {
   int id;
@@ -11,7 +12,7 @@ typedef struct {
 
 typedef struct listNode{
   int idCurrentCity;
-  int totalCost;
+  int cost;
   int heuristic;
   struct listNode*  father;
 
