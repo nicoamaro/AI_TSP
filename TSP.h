@@ -3,7 +3,6 @@
 #include <string.h>
 
 #define HEURISTICS_ON
-
 typedef struct {
   int id;
   int* nextCity;

@@ -98,7 +98,7 @@ void populateCity(city* cityArray, int cityNum, char* data)
 
 void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 {
-  int startNode = 0, depth=0, cityFlag=0, i=0, NA=0;
+  int startNode = cityNum-2, depth=0, cityFlag=0, i=0, NA=0;
   listNode* currentNode;
   listNode* fatherNode = openList;
   listNode* previousNode = openList;
@@ -110,7 +110,9 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   // GOAL = (openList->idCurrentCity == startNode && depth == cityNum);
   //Empiezo con el primer nodo
   //Configuro el primer nodo Lista abierta
-  openList->idCurrentCity=cityArray[startNode].id;
+  printf("START NODE = %d\n",cityArray[startNode].id);
+  openList->idCurrentCity = startNode;
+  printf("StartNode = %d",openList->idCurrentCity);
   openList->cost = 0;
   openList->heuristic = minDistance;
   openList->previousListItem = NULL;
@@ -151,12 +153,12 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     if(openList->idCurrentCity == startNode && depth > 1) // Encontre GOAL!!!!
       {
         printf("\n\n************************* GOAL  ******************************************\n\n");
-        //printf("------------------------------------------------------\n\n");
-        //printf("---------Open List Desordenada nivel %d----------------\n",i+1);
-        //printList(openList);
-        //printf("------------------------------------------------------\n\n");
-        //printf("---------Closed  List Desordenada nivel %d----------------\n",i+1);
-        //printList(closedList);
+        printf("------------------------------------------------------\n\n");
+        printf("---------Open List Desordenada nivel %d----------------\n",i+1);
+        printList(openList);
+        printf("------------------------------------------------------\n\n");
+        printf("---------Closed  List Desordenada nivel %d----------------\n",i+1);
+        printList(closedList);
         printf("Total COST = %d\n",openList->cost);
         printf("Path: ");
         while(depth)
@@ -173,10 +175,13 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     //////////////////// SI NO ES NODO GOAL ABRIMOS, INCLUIMOS NUEVOS NODOS AL FINAL
     // DE LISTA ABIERTA ////////////////////////////////////////
     
-    if(depth == cityNum)//Si estoy en el ultimo nodo agergo solo el nodo GOAL
+    if(depth == cityNum)//Si estoy en el ultimo nodo agrego solo el nodo GOAL
       {
         currentNode = malloc(sizeof(listNode));
-        agregarItem(currentNode,cityArray,cityNum,startNode,fatherNode,previousNode, minimumDistancesArray, minDistance, depth, path);
+        int Node = startNode;
+        if(currentNode->idCurrentCity < Node)
+          Node -= 1;
+        agregarItem(currentNode,cityArray,cityNum,Node,fatherNode,previousNode, minimumDistancesArray, minDistance, depth, path);
         previousNode = currentNode;
       }
     else
@@ -350,7 +355,7 @@ void printList(listNode* a)
       {
         myFather = currentNode->father->idCurrentCity;
       }
-    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->cost+currentNode->heuristic,myFather);
+    printf("id=%d, cost=%d, heur=%d, father=%d\n",currentNode->idCurrentCity, currentNode->cost, currentNode->heuristic,myFather);
     currentNode= currentNode->nextListItem;
   }
 }
