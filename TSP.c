@@ -8,8 +8,7 @@ int main(int argc, char* argv[])
   char* delimiter;
   listNode openList;
   listNode closedList;
-
-
+  
 
   if(argc != 2)
   {
@@ -84,54 +83,152 @@ void populateCity(city* cityArray, int cityNum, char* data)
 
 void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 {
-  int startNode = 0;
+  int startNode = 0, depth=0, cityFlag=0, i=0, NA=0;
   listNode* currentNode;
   listNode* fatherNode = openList;
   listNode* previousNode = openList;
-
+  char path[cityNum]; //reservo un vector para guardar el camino recorrido
+  
+  // GOAL = (openList->idCurrentCity == startNode && depth == cityNum);
   //Empiezo con el primer nodo
-  //Configuro el primer nodo
+  //Configuro el primer nodo Lista abierta
   openList->idCurrentCity=cityArray[startNode].id;
   openList->totalCost = 0;
   openList->previousListItem = NULL;
+  openList->nextListItem = NULL;
   openList->father = NULL;
-  for(int i=0;i<3;i++)//for(int i=0;i<cityNum-1;i++)
+  //Lista cerrada
+  closedList  = NULL; //"lista cerrada vacia"
+
+  //while (openlist) //Salgo cuando lista esta vacia con error o encuentro GOAL
+  while(openList)//for(int i=0;i<10;i++)//while(openList)
   {
-    printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
-    fatherNode = openList;
-    closedList -> nextListItem = fatherNode;
+    NA++;
+        printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
+    fatherNode = openList; //father Node primer elemento de openlist
+    currentNode = fatherNode;//currentNode para recorrer el camino de parents
+    while(previousNode->nextListItem) //previousNode tiene que ser el ultimo elemenot de openList
+      {
+        previousNode = previousNode->nextListItem;
+      }
+    
+    ////////BUSCAMOS CAMINO RECORRIDO SIGUIENDO LOS NODOS FATHER
+    ////////////////////
+    depth = 0; //reseteo contador de profundidad
+    path[depth] = currentNode->idCurrentCity; //Primer elemento de camino es ciudad actual
+    depth++;
+    while(currentNode)
+      {
+        if (currentNode->father)
+          {
+            path[depth] = currentNode->father->idCurrentCity; //Guardo la ciudad visitada
+            depth++;
+          }
+        currentNode = currentNode->father;//Paso un nivel mas arriba
+      }
+    
+    ////////////////////
+    
+    if(openList->idCurrentCity == startNode && depth > 1) // Encontre GOAL!!!!
+      {
+        printf("\n\n************************* GOAL  ******************************************\n\n");
+        //printf("------------------------------------------------------\n\n");
+        //printf("---------Open List Desordenada nivel %d----------------\n",i+1);
+        //printList(openList);
+        //printf("------------------------------------------------------\n\n");
+        //printf("---------Closed  List Desordenada nivel %d----------------\n",i+1);
+        //printList(closedList);
+        printf("Total COST = %d\n",openList->totalCost);
+        printf("Path: ");
+        while(depth)
+          {
+            printf("%d;",path[depth-1]);
+            depth--;
+          }
+        printf("\nNodos Abiertos: %d\n\n",NA);
+        //Liberar memoria
+        freeMemory(openList);
+        //freeMemory(closedList); //ERROR...
+        return;
+      }
+    //////////////////// SI NO ES NODO GOAL ABRIMOS, INCLUIMOS NUEVOS NODOS AL FINAL
+    // DE LISTA ABIERTA ////////////////////////////////////////
+    
+    if(depth == cityNum)//Si estoy en el ultimo nodo agergo solo el nodo GOAL
+      {
+        currentNode = malloc(sizeof(listNode));
+        agregarItem(currentNode,cityArray,cityNum,startNode,fatherNode,previousNode );
+        previousNode = currentNode;
+      }
+    else
+      {
+        for(int j = 0; j < cityNum -1; j++)
+          {
+            int currentCity = cityArray[fatherNode->idCurrentCity].nextCity[j];
+            for(int k = 0; k < depth; k++)
+              {
+                if (currentCity == path[k])
+                  {
+                    cityFlag = 1;
+                    break;
+                  }
+              }
+            if (!cityFlag) //Si no esta en el camino recorrido agrego el nodo
+              {
+                currentNode = malloc(sizeof(listNode));
+                agregarItem(currentNode,cityArray,cityNum,j,fatherNode,previousNode );
+                previousNode = currentNode;
+              }
+            cityFlag = 0;
+          }
+      }
+    ////////////////////////////////////////////////////////////////////////////////
+    
+    ////// SACAMOS NODO ABIERTO DE LISTA ABIERTA Y LO PASAMOS A FINAL DE LISTA CERRADA //////
+    openList = fatherNode->nextListItem; //Cambio primer item de lista abierta
+    openList->previousListItem = NULL; 
+    currentNode = closedList;
+    if(closedList)
+      {
+        while(currentNode->nextListItem)
+          {
+            currentNode = currentNode->nextListItem;
+          }
+        currentNode->nextListItem = fatherNode;
+        fatherNode->previousListItem = currentNode;
+      }  
+    else
+      {
+        closedList = fatherNode;
+        fatherNode->previousListItem = NULL; //Al pedo?
+        fatherNode->father = NULL; // Al pedo?
+      }
+    fatherNode->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null
+    ////////////////////////////////////////////////////////////////////////////////
 
-    for(int j = 0; j < cityNum -1; j++)
-    {
-      currentNode = malloc(sizeof(listNode));
-      agregarItem(currentNode,cityArray,cityNum,j,fatherNode,previousNode );
-      previousNode = currentNode;
-
-    }
-    openList = fatherNode->nextListItem;
-    printf("------------------------------------------------------\n\n");
-    printf("---------Open List Desordenada nivel %d----------------\n",i+1);
-    printList(openList);
-    printf("------------------------------------------------------\n\n");
-    printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
+    //printf("------------------------------------------------------\n\n");
+    //printf("---------Open List Desordenada nivel %d----------------\n",i+1);
+    //printList(openList);
+    //printf("------------------------------------------------------\n\n");
+    //printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
     reordenarOpenList(openList);
-    printList(openList);
-    printf("------------------------------------------------------\n\n");
-    printf("-----------Open List Ordenada y Tachada nivel %d-------\n",i+1);
-    tacharRepetidos(openList);
-    printList(openList);
-    printf("------------------------------------------------------\n\n");
+    //printList(openList);
+    //printf("------------------------------------------------------\n\n");
+    //printf("-----------Open List Ordenada y Tachada nivel %d-------\n",i+1);
+    //    tacharRepetidos(openList);
+    //printList(openList);
+    //printf("------------------------------------------------------\n\n");
     //Termine de armar la lista de este nivel
     //Cierro el nodo que se expandio
-    closedList->nextListItem->nextListItem=NULL;
-    printf("-------------Closed List nivel %d----------------------\n",i+1);
-    printList(closedList);
-    printf("------------------------------------------------------\n\n");
-
-
+    //printf("-------------Closed List nivel %d----------------------\n",i+1);
+    //printList(closedList);
+    //printf("------------------------------------------------------\n\n");
+    i++;
   }
 
+  //SI SALGO DEL WHILE POR ACA NO ENCONTRE EL GOAL!!!!!!
   printf("\n\n****************************************************************************\n\n");
+  printf("ERROR!! NO SE ENCONTRO SOLUCION.\n");
 
 }
 
@@ -270,4 +367,19 @@ void borrarItem(listNode* a)
     a->nextListItem->previousListItem = a->previousListItem;
   }
   free(a);
+}
+
+void freeMemory(listNode* a)
+{
+  while(a->nextListItem)
+    {
+      a = a->nextListItem;
+      if (a->previousListItem) //Necesario?
+        {
+          // printf("Liberando\n");
+          free(a->previousListItem);
+        }
+    }
+  //printf("Liberando ultimo\n");
+    free(a);
 }
