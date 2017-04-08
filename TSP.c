@@ -22,12 +22,27 @@ int main(int argc, char* argv[])
   cityNum = atoi(importText);
   printf("%d\n", cityNum);
   city cityArray[cityNum];
-
   initializeCity(cityArray, cityNum);
   fgets(importText, 1024, importFile);
   populateCity(cityArray, cityNum, importText);
   TSP(cityArray, cityNum, &openList, &closedList);
   return 0;
+}
+
+int findMinimumDistances(city* cityArray, int* dist, int cityNum)
+{
+  int distance =0;
+  for(int i = 0; i < cityNum; i++)
+    {
+      dist[i] = cityArray[i].distance[0];
+      for(int j = 0; j<cityNum-1; j++)
+        {
+          if (dist[i] > cityArray[i].distance[j])
+            dist[i] = cityArray[i].distance[j];
+        }
+      distance += dist[i];
+    }
+  return (distance);
 }
 
 void initializeCity(city* cityArray, int cityNum)
@@ -87,13 +102,17 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   listNode* currentNode;
   listNode* fatherNode = openList;
   listNode* previousNode = openList;
-  char path[cityNum]; //reservo un vector para guardar el camino recorrido
-  
+  int path[cityNum]; //reservo un vector para guardar el camino recorrido
+  //Generar vector de distancias minimas
+  int minimumDistancesArray[cityNum];
+  int minDistance = findMinimumDistances(cityArray, minimumDistancesArray, cityNum);
+  printf("Distancia minima = %d\n",minDistance);
   // GOAL = (openList->idCurrentCity == startNode && depth == cityNum);
   //Empiezo con el primer nodo
   //Configuro el primer nodo Lista abierta
   openList->idCurrentCity=cityArray[startNode].id;
   openList->totalCost = 0;
+  openList->heuristic = minDistance;
   openList->previousListItem = NULL;
   openList->nextListItem = NULL;
   openList->father = NULL;
@@ -104,7 +123,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   while(openList)//for(int i=0;i<10;i++)//while(openList)
   {
     NA++;
-        printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
+    //printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
     fatherNode = openList; //father Node primer elemento de openlist
     currentNode = fatherNode;//currentNode para recorrer el camino de parents
     while(previousNode->nextListItem) //previousNode tiene que ser el ultimo elemenot de openList
@@ -157,7 +176,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     if(depth == cityNum)//Si estoy en el ultimo nodo agergo solo el nodo GOAL
       {
         currentNode = malloc(sizeof(listNode));
-        agregarItem(currentNode,cityArray,cityNum,startNode,fatherNode,previousNode );
+        agregarItem(currentNode,cityArray,cityNum,startNode,fatherNode,previousNode, minimumDistancesArray, minDistance, depth, path);
         previousNode = currentNode;
       }
     else
@@ -176,7 +195,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
             if (!cityFlag) //Si no esta en el camino recorrido agrego el nodo
               {
                 currentNode = malloc(sizeof(listNode));
-                agregarItem(currentNode,cityArray,cityNum,j,fatherNode,previousNode );
+                agregarItem(currentNode,cityArray,cityNum,j,fatherNode,previousNode, minimumDistancesArray, minDistance, depth, path);
                 previousNode = currentNode;
               }
             cityFlag = 0;
@@ -235,12 +254,23 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 int F(listNode* current, int costToMe, int costToMyFather)
 {
   int G = costToMe + costToMyFather;
-  return  G + H(current) ;
+  for(int i = 0; i < depth-1; i++)
+    {
+      G += ;
+    }
+  return  G;// + H(current) ;
 }
 
-int H(listNode* current)
+int H(int* dist, int minDistance, int depth, int* path)
 {
-  return 0;
+  int h = minDistance;
+  printf("LLEGUE H=%d, depth=%d\n",h, depth);
+  for(int i = 0; i < depth-1; i++)
+    {
+      h -= dist[path[i]];
+    }
+  printf("h = %d\n",h);
+  return (h);
 }
 
 void reordenarOpenList(listNode* openList)
@@ -324,10 +354,11 @@ void printList(listNode* a)
 }
 
 
-void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode )
+void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode, int *dist,  int minDistance, int depth, int* path )
 {
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
-  currentNode->   totalCost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->totalCost);
+  //currentNode->   totalCost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->totalCost);
+  currentNode->   totalCost         = fatherNode->totalCost + cityArray[fatherNode->idCurrentCity].distance[j] + H(dist, minDistance, depth, path);
   currentNode->   father            = fatherNode;
   currentNode->   previousListItem  = previousNode;
   currentNode->   nextListItem      = NULL;

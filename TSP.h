@@ -12,6 +12,7 @@ typedef struct {
 typedef struct listNode{
   int idCurrentCity;
   int totalCost;
+  int heuristic;
   struct listNode*  father;
 
   struct listNode* nextListItem;
@@ -23,11 +24,12 @@ void initializeCity(city* cityArray, int cityNum);
 void populateCity(city* cityArray, int cityNum, char* data);
 void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList);
 int F(listNode* current, int costToMe, int costToMyFather);
-int H(listNode* current);
+int H(int* dist, int minDistance, int depth, int* path);
 void reordenarOpenList(listNode* openList);
 void switchItems(listNode* a, listNode* b);
 void printList(listNode* a);
-void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode );
+void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode, int* dist, int minDistance, int depth, int* path);
 void tacharRepetidos(listNode* openList);
 void borrarItem (listNode* a);
 void freeMemory (listNode*a);
+int findMinimumDistances (city* cityArray, int* dist, int cityNum);
