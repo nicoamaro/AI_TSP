@@ -6,8 +6,8 @@ int main(int argc, char* argv[])
   char importText[1024];
   int cityNum, len;
   char* delimiter;
-  listNode openList;
-  listNode closedList;
+  listNode* openList;
+  listNode* closedList;
   
 
   if(argc != 2)
@@ -25,7 +25,8 @@ int main(int argc, char* argv[])
   initializeCity(cityArray, cityNum);
   fgets(importText, 1024, importFile);
   populateCity(cityArray, cityNum, importText);
-  TSP(cityArray, cityNum, &openList, &closedList);
+  openList = malloc(sizeof (listNode));
+  TSP(cityArray, cityNum, openList, closedList);
   return 0;
 }
 
@@ -130,7 +131,6 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   while(openList)//for(int i=0;i<20;i++)//while(openList)
   {
     NA++;
-    //printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
     fatherNode = openList; //father Node primer elemento de openlist
     currentNode = fatherNode;//currentNode para recorrer el camino de parents
     while(previousNode->nextListItem) //previousNode tiene que ser el ultimo elemenot de openList
@@ -173,7 +173,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         printf("\nNodos Abiertos: %d\n\n",NA);
         //Liberar memoria
         freeMemory(openList);
-        //freeMemory(closedList); //ERROR...
+        freeMemory(closedList);
         return;
       }
     //////////////////// SI NO ES NODO GOAL ABRIMOS, INCLUIMOS NUEVOS NODOS AL FINAL
@@ -228,8 +228,6 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     else //Si no hay ningun nodo en Lista CERRADA
       {
         closedList = fatherNode;
-        fatherNode->previousListItem = NULL; //Al pedo?
-        fatherNode->father = NULL; // Al pedo?
       }
     fatherNode->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null
     ////////////////////////////////////////////////////////////////////////////////
