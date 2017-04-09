@@ -102,7 +102,6 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   int startNode = cityNum-1, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
   listNode* currentNode;
   listNode* fatherNode = openList;
-  listNode* previousNode = openList;
   int path[cityNum]; //reservo un vector para guardar el camino recorrido
   //Generar vector de distancias minimas
   int minimumDistancesArray[cityNum];
@@ -133,11 +132,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     NA++;
     fatherNode = openList; //father Node primer elemento de openlist
     currentNode = fatherNode;//currentNode para recorrer el camino de parents
-    while(previousNode->nextListItem) //previousNode tiene que ser el ultimo elemenot de openList
-      {
-        previousNode = previousNode->nextListItem;
-      }
-    
+        
     ////////BUSCAMOS CAMINO RECORRIDO SIGUIENDO LOS NODOS FATHER
     ////////////////////
     depth = 0; //reseteo contador de profundidad
@@ -157,12 +152,12 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     if(openList->idCurrentCity == startNode && depth > 1) // Encontre GOAL!!!!
       {
         printf("\n\n************************* GOAL  ******************************************\n\n");
-        printf("------------------------------------------------------\n\n");
-        printf("---------Open List Desordenada nivel %d----------------\n",NA);
-        printList(openList);
-        printf("------------------------------------------------------\n\n");
-        printf("---------Closed  List Desordenada nivel %d----------------\n",NA);
-        printList(closedList);
+        /* printf("------------------------------------------------------\n\n"); */
+        /* printf("---------Open List Desordenada nivel %d----------------\n",NA); */
+        /* printList(openList); */
+        /* printf("------------------------------------------------------\n\n"); */
+        /* printf("---------Closed  List Desordenada nivel %d----------------\n",NA); */
+        /* printList(closedList); */
         printf("Total COST = %d\n",openList->cost);
         printf("Path: ");
         while(depth)
@@ -185,8 +180,8 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         Node = startNode;
         if(fatherNode->idCurrentCity < Node)
           Node -= 1;
-        agregarItem(currentNode,cityArray,cityNum,Node,fatherNode,previousNode, minimumDistancesArray, minDistance, depth, path);
-        previousNode = currentNode;
+        agregarItem(currentNode,cityArray,cityNum,Node,fatherNode, minimumDistancesArray, minDistance, depth, path);
+        
       }
     else
       {
@@ -204,8 +199,8 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
             if (!cityFlag) //Si no esta en el camino recorrido agrego el nodo
               {
                 currentNode = malloc(sizeof(listNode));
-                agregarItem(currentNode,cityArray,cityNum,j,fatherNode,previousNode, minimumDistancesArray, minDistance, depth, path);
-                previousNode = currentNode;
+                agregarItem(currentNode,cityArray,cityNum,j,fatherNode, minimumDistancesArray, minDistance, depth, path);
+                
               }
             cityFlag = 0;
           }
@@ -362,7 +357,7 @@ void printList(listNode* a)
 }
 
 
-void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode, int *dist,  int minDistance, int depth, int* path )
+void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, int *dist,  int minDistance, int depth, int* path )
 {
   listNode *pivotNode = fatherNode;
   listNode *prevNode = NULL;
