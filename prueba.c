@@ -84,15 +84,14 @@ void switchItems (listNode* a, listNode* b){
     aux->nextListItem = b->nextListItem;
     aux->prevListItem = b->prevListItem;
 
-    popItem(a);
     popItem(b);
+    popItem(a);
 
     if( NULL != a->nextListItem && b != a->nextListItem){
         putItemBefore(b,a->nextListItem);
     }else if(b != a->prevListItem){
         putItemAfter(b,a->prevListItem);
     }else{
-        printf("entramos aca\n" );
         putItemAfter(b, a);
     }
 
@@ -251,13 +250,31 @@ int main(int argc, char* argv[]){
     reversePrintList(searchLast(c));
     printf("----------------------\n");
 
-    switchItems(searchLast(c),(searchLast(c))->prevListItem);//Hay un problema, me borra un elemento cuando son dos contiguos ultimos
-    printf("\nCambiamos dos contiguos\n");
+    switchItems(searchFirst(c)->nextListItem->nextListItem,(searchFirst(c))->nextListItem);//Hay un problema, me borra un elemento cuando son dos contiguos ultimos
+    printf("\nCambiamos dos contiguos del medio\n");
     printf("----------------------\n");
     printList(searchFirst(c));
     printf("----------------------\n");
     reversePrintList(searchLast(c));
     printf("----------------------\n");
+
+    switchItems(searchLast(c)->prevListItem,searchLast(c));
+    printf("\nCambiamos dos ultimos\n");
+    printf("----------------------\n");
+    printList(searchFirst(c));
+    printf("----------------------\n");
+    reversePrintList(searchLast(c));
+    printf("----------------------\n");
+
+    switchItems(searchFirst(c)->nextListItem,searchFirst(c));//Hay un problema, me borra un elemento cuando son dos contiguos ultimos
+    printf("\nCambiamos dos primeros\n");
+    printf("----------------------\n");
+    printList(searchFirst(c));
+    printf("----------------------\n");
+    reversePrintList(searchLast(c));
+    printf("----------------------\n");
+
+
 
     /*a=orderAZ(searchFirst(c));
     printf("\nOrdenamos AZ\n");
