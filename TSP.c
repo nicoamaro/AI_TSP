@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 
 int findMinimumDistances(city* cityArray, int* dist, int cityNum)
 {
-  int distance =0;
+  int distance = 0;
   for(int i = 0; i < cityNum; i++)
     {
       dist[i] = cityArray[i].distance[0];
@@ -98,7 +98,7 @@ void populateCity(city* cityArray, int cityNum, char* data)
 
 void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 {
-  int startNode = cityNum-2, depth=0, cityFlag=0, i=0, NA=0;
+  int startNode = cityNum-1, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
   listNode* currentNode;
   listNode* fatherNode = openList;
   listNode* previousNode = openList;
@@ -112,17 +112,22 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   //Configuro el primer nodo Lista abierta
   printf("START NODE = %d\n",cityArray[startNode].id);
   openList->idCurrentCity = startNode;
-  printf("StartNode = %d",openList->idCurrentCity);
   openList->cost = 0;
+ 
+  #ifdef HEURISTICS_ON
   openList->heuristic = minDistance;
+  #else
+  openList->heuristic = 0;
+  #endif
+  
   openList->previousListItem = NULL;
   openList->nextListItem = NULL;
   openList->father = NULL;
   //Lista cerrada
   closedList  = NULL; //"lista cerrada vacia"
 
-  //while (openlist) //Salgo cuando lista esta vacia con error o encuentro GOAL
-  while(openList)//for(int i=0;i<10;i++)//while(openList)
+  //Salgo cuando lista esta vacia con error o encuentro GOAL
+  while(openList)//for(int i=0;i<20;i++)//while(openList)
   {
     NA++;
     //printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
@@ -147,17 +152,16 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
           }
         currentNode = currentNode->father;//Paso un nivel mas arriba
       }
-    
     ////////////////////
     
     if(openList->idCurrentCity == startNode && depth > 1) // Encontre GOAL!!!!
       {
         printf("\n\n************************* GOAL  ******************************************\n\n");
         printf("------------------------------------------------------\n\n");
-        printf("---------Open List Desordenada nivel %d----------------\n",i+1);
+        printf("---------Open List Desordenada nivel %d----------------\n",NA);
         printList(openList);
         printf("------------------------------------------------------\n\n");
-        printf("---------Closed  List Desordenada nivel %d----------------\n",i+1);
+        printf("---------Closed  List Desordenada nivel %d----------------\n",NA);
         printList(closedList);
         printf("Total COST = %d\n",openList->cost);
         printf("Path: ");
@@ -178,8 +182,8 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     if(depth == cityNum)//Si estoy en el ultimo nodo agrego solo el nodo GOAL
       {
         currentNode = malloc(sizeof(listNode));
-        int Node = startNode;
-        if(currentNode->idCurrentCity < Node)
+        Node = startNode;
+        if(fatherNode->idCurrentCity < Node)
           Node -= 1;
         agregarItem(currentNode,cityArray,cityNum,Node,fatherNode,previousNode, minimumDistancesArray, minDistance, depth, path);
         previousNode = currentNode;
@@ -188,7 +192,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
       {
         for(int j = 0; j < cityNum -1; j++)
           {
-            int currentCity = cityArray[fatherNode->idCurrentCity].nextCity[j];
+            currentCity = cityArray[fatherNode->idCurrentCity].nextCity[j];
             for(int k = 0; k < depth; k++)
               {
                 if (currentCity == path[k])
@@ -221,7 +225,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         currentNode->nextListItem = fatherNode;
         fatherNode->previousListItem = currentNode;
       }  
-    else
+    else //Si no hay ningun nodo en Lista CERRADA
       {
         closedList = fatherNode;
         fatherNode->previousListItem = NULL; //Al pedo?
@@ -230,11 +234,11 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     fatherNode->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null
     ////////////////////////////////////////////////////////////////////////////////
 
-    //printf("------------------------------------------------------\n\n");
+    // printf("------------------------------------------------------\n\n");
     //printf("---------Open List Desordenada nivel %d----------------\n",i+1);
     //printList(openList);
     //printf("------------------------------------------------------\n\n");
-    // printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
+    //printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
     reordenarOpenList(openList);
     //printList(openList);
     //printf("------------------------------------------------------\n\n");
@@ -247,7 +251,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     //printf("-------------Closed List nivel %d----------------------\n",i+1);
     //printList(closedList);
     //printf("------------------------------------------------------\n\n");
-    i++;
+    //i++;
   }
 
   //SI SALGO DEL WHILE POR ACA NO ENCONTRE EL GOAL!!!!!!
@@ -265,7 +269,6 @@ int F(listNode* current, int costToMe, int costToMyFather)
 int H(int* dist, int minDistance, int depth, int* path)
 {
   #ifdef HEURISTICS_ON
-  //printf("HEURISTICA\n");
   int h = minDistance;
   for(int i = 0; i < depth; i++)
     {
@@ -366,7 +369,7 @@ void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listN
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
   //currentNode->   cost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->cost);
   currentNode->   cost         = fatherNode->cost + cityArray[fatherNode->idCurrentCity].distance[j];
-  currentNode->   heuristic         =  H(dist, minDistance, depth, path);
+  currentNode->   heuristic         =  H(dist, minDistance, depth, path); // En este caso es para todos los nodos hijos igual, asi que lo puedo calcular afuera una sola vez...
   currentNode->   father            = fatherNode;
   currentNode->   previousListItem  = previousNode;
   currentNode->   nextListItem      = NULL;
