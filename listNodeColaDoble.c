@@ -1,5 +1,4 @@
-//Cola doble
-
+#include "listNodeColaDoble.h"
 
 void listNodeAgregarItem ()
 {

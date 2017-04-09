@@ -11,9 +11,13 @@ bool prevElementIs(listNode* element, listNode* prev_element){
 }
 
 listNode* setNextElement(listNode* element, listNode* next_element){
-    listNode* orfan_element = element->nextListItem;
-    element->nextListItem = next_element;
-    return orfan_element;
+    listNode* orfan_element;
+    if (NULL!= element){
+        orfan_element = element->nextListItem;
+        element->nextListItem = next_element;
+        return orfan_element;
+    }
+    return NULL;
 }
 
 listNode* setPrevElement(listNode* element, listNode* prev_element){
@@ -27,22 +31,81 @@ listNode* setPrevElement(listNode* element, listNode* prev_element){
     return NULL;
 }
 
-void putItem(listNode* element, listNode* prev_element){
+void putItemAfter(listNode* new_element, listNode* prev_element){
     listNode* orfan_element;
-
-    orfan_element = setNextElement(prev_element, element);
-    setPrevElement(orfan_element, element);
-    setNextElement(element, orfan_element);
-    setPrevElement(element,prev_element);
+    orfan_element = setNextElement(prev_element, new_element);
+    setPrevElement(orfan_element, new_element);
+    setNextElement(new_element, orfan_element);
+    setPrevElement(new_element,prev_element);
 }
 
-listNode* popItem(listNode* prev_element){
-    listNode* poped_element;
-    poped_element = setNextElement(prev_element, prev_element->nextListItem->nextListItem);
-    setPrevElement(prev_element->nextListItem->nextListItem, prev_element);
+void putItemBefore(listNode* new_element, listNode* next_element){
+    listNode* orfan_element;
+
+    orfan_element = setPrevElement(next_element,new_element);
+    setNextElement(orfan_element, new_element);
+
+    setPrevElement(new_element, orfan_element);
+    setNextElement(new_element,next_element);
+}
+
+listNode* searchLast(listNode* some_element){
+    listNode* last_element = some_element;
+    while (NULL != last_element->nextListItem){
+        last_element = last_element->nextListItem;
+    }
+    return last_element;
+}
+
+listNode* searchFirst(listNode* some_element){
+    listNode* first_element = some_element;
+    while (NULL != first_element->prevListItem){
+        first_element = first_element->prevListItem;
+    }
+    return first_element;
+}
+
+listNode* popItem(listNode* poped_element){
+
+    if (NULL != poped_element->prevListItem){
+        poped_element->prevListItem->nextListItem = poped_element->nextListItem;
+    }
+    if (NULL != poped_element->nextListItem){
+        poped_element->nextListItem->prevListItem = poped_element->prevListItem;
+    }
+
+
 
     return poped_element;
 }
+
+void switchItems (listNode* a, listNode* b){
+    listNode* aux = malloc(sizeof(listNode));
+    aux->nextListItem = b->nextListItem;
+    aux->prevListItem = b->prevListItem;
+
+    popItem(a);
+    popItem(b);
+
+    if( NULL != a->nextListItem && b != a->nextListItem){
+        putItemBefore(b,a->nextListItem);
+    }else if(b != a->prevListItem){
+        putItemAfter(b,a->prevListItem);
+    }else{
+        printf("entramos aca\n" );
+        putItemAfter(b, a);
+    }
+
+    if( NULL != aux->nextListItem && a != aux->nextListItem){
+        putItemBefore(a,aux->nextListItem);
+    }else if(a != aux->prevListItem){
+        putItemAfter(a, aux->prevListItem);
+    }else{
+        putItemAfter(a, b);
+    }
+}
+
+
 
 listNode* createItem(){
     listNode* new_item = malloc(sizeof(listNode));
@@ -51,8 +114,7 @@ listNode* createItem(){
     return new_item;
 }
 
-listNode* newList(unsigned int list_len)
-{
+listNode* newList(unsigned int list_len){
     listNode* first_item = createItem();
     listNode* new_item;
     listNode* prev_item = first_item;
@@ -68,16 +130,7 @@ listNode* newList(unsigned int list_len)
     return first_item;
 }
 
-void test_newList()
-{
-}
-
-void test_setNextElement()
-{
-}
-
-void printList(listNode* a)
-{
+void printList(listNode* a){
     listNode* currentNode = a;
     while (NULL != currentNode)
     {
@@ -86,8 +139,7 @@ void printList(listNode* a)
     }
 }
 
-void reversePrintList(listNode* a)
-{
+void reversePrintList(listNode* a){
     listNode* currentNode = a;
     while (NULL != currentNode)
     {
@@ -96,20 +148,49 @@ void reversePrintList(listNode* a)
     }
 }
 
-int main(int argc, char* argv[])
-{
+listNode* orderAZ(listNode* a){
+    listNode *b = a->nextListItem;
+    listNode *aux;
+
+    while(NULL != a->nextListItem){
+        b = a->nextListItem;
+        printf("a: %d\n", a->totalCost);
+        while (NULL != b){
+
+            if (a->totalCost > b-> totalCost){
+                printf("\ta: %d\tb: %d\ta>b\n",a->totalCost, b->totalCost);
+                switchItems(a,b);
+                aux=a;
+                a=b;
+                b=aux;
+            }else{
+                printf("\ta: %d\tb: %d\n",a->totalCost, b->totalCost);
+            }
+            b = b->nextListItem;
+        }
+        printList(searchFirst(a));
+        a = a->nextListItem;
+    }
+    return searchFirst(a);
+}
+
+int main(int argc, char* argv[]){
+    listNode *first = createItem();
     listNode *a = createItem();
     listNode *b = createItem();
     listNode *c = createItem();
     listNode *d = createItem();
     listNode *e = createItem();
-
+    listNode *f = createItem();
+    listNode *last = createItem();
 
     a->totalCost = 1;
     b->totalCost = 2;
     c->totalCost = 3;
     d->totalCost = 4;
-    e->totalCost = 10;
+    e->totalCost = 5;
+    f->totalCost = 6;
+
 
     setNextElement(a,b);
     setNextElement(b,c);
@@ -119,20 +200,73 @@ int main(int argc, char* argv[])
     setPrevElement(c,b);
     setPrevElement(b,a);
 
+    printf("\nNueva lista\n");
+    printf("----------------------\n");
+    printList(searchFirst(c));
+    printf("----------------------\n");
+    reversePrintList(searchLast(c));
+    printf("----------------------\n");
 
+    putItemAfter(e,b);
+    printf("\nAgregamos elemento nro (5) despues del (2)\n");
     printf("----------------------\n");
-    printList(a);
+    printList(searchFirst(c));
     printf("----------------------\n");
-    reversePrintList(d);
+    reversePrintList(searchLast(c));
     printf("----------------------\n");
-    printf("**********************\n");
 
-    putItem(e,d);
+    putItemBefore(f,a);
+    printf("\nAgregamos elemento nro (6) antes del (1)\n");
+    printf("----------------------\n");
+    printList(searchFirst(c));
+    printf("----------------------\n");
+    reversePrintList(searchLast(c));
+    printf("----------------------\n");
 
+
+
+    popItem(searchFirst(c));
+    printf("\nSacamos el primer elemento\n");
     printf("----------------------\n");
-    printList(a);
+    printList(searchFirst(c));
     printf("----------------------\n");
-    reversePrintList(e);
+    reversePrintList(searchLast(c));
     printf("----------------------\n");
+
+    popItem(searchLast(c));
+    printf("\nSacamos el ultimo elemento\n");
+    printf("----------------------\n");
+    printList(searchFirst(c));
+    printf("----------------------\n");
+    reversePrintList(searchLast(c));
+    printf("----------------------\n");
+
+
+
+    switchItems(searchLast(c),searchFirst(c));
+    printf("\nCambiamos ultimo con primero\n");
+    printf("----------------------\n");
+    printList(searchFirst(c));
+    printf("----------------------\n");
+    reversePrintList(searchLast(c));
+    printf("----------------------\n");
+
+    switchItems(searchLast(c),(searchLast(c))->prevListItem);//Hay un problema, me borra un elemento cuando son dos contiguos ultimos
+    printf("\nCambiamos dos contiguos\n");
+    printf("----------------------\n");
+    printList(searchFirst(c));
+    printf("----------------------\n");
+    reversePrintList(searchLast(c));
+    printf("----------------------\n");
+
+    /*a=orderAZ(searchFirst(c));
+    printf("\nOrdenamos AZ\n");
+    printf("----------------------\n");
+    printList(searchFirst(c));
+    printf("----------------------\n");
+    reversePrintList(searchLast(c));
+    printf("----------------------\n");
+*/
+
 
 }
