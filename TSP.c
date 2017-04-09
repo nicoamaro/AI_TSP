@@ -234,12 +234,12 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     fatherNode->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null
     ////////////////////////////////////////////////////////////////////////////////
 
-    // printf("------------------------------------------------------\n\n");
+    //printf("------------------------------------------------------\n\n");
     //printf("---------Open List Desordenada nivel %d----------------\n",i+1);
     //printList(openList);
     //printf("------------------------------------------------------\n\n");
     //printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
-    reordenarOpenList(openList);
+    //    reordenarOpenList(openList);
     //printList(openList);
     //printf("------------------------------------------------------\n\n");
     //printf("-----------Open List Ordenada y Tachada nivel %d-------\n",i+1);
@@ -366,14 +366,34 @@ void printList(listNode* a)
 
 void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode, int *dist,  int minDistance, int depth, int* path )
 {
+  listNode *pivotNode = fatherNode;
+  listNode *prevNode = NULL;
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
   //currentNode->   cost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->cost);
-  currentNode->   cost         = fatherNode->cost + cityArray[fatherNode->idCurrentCity].distance[j];
+  currentNode->   cost              = fatherNode->cost + cityArray[fatherNode->idCurrentCity].distance[j];
   currentNode->   heuristic         =  H(dist, minDistance, depth, path); // En este caso es para todos los nodos hijos igual, asi que lo puedo calcular afuera una sola vez...
   currentNode->   father            = fatherNode;
-  currentNode->   previousListItem  = previousNode;
-  currentNode->   nextListItem      = NULL;
-  previousNode->  nextListItem      = currentNode;
+  int currentCost = currentNode->cost + currentNode->heuristic;
+  while(pivotNode->nextListItem)//Recorro la lista hasta encontrar el lugar donde insertar el nodo
+    {
+      if(currentCost < (pivotNode->cost+pivotNode->heuristic)) //Tengo que insertar el nodo antes
+        {
+          currentNode->   previousListItem  = pivotNode->previousListItem;
+          prevNode                          = pivotNode->previousListItem;
+          if(prevNode)
+            prevNode->    nextListItem      = currentNode;
+          currentNode->   nextListItem      = pivotNode;
+          pivotNode->     previousListItem  = currentNode;
+          break;
+        }
+        pivotNode = pivotNode->nextListItem;
+    }
+      if(!pivotNode->nextListItem) //Llegue al final de la lista
+        {
+          currentNode->   previousListItem  = pivotNode;
+          currentNode->   nextListItem      = NULL;
+          pivotNode->     nextListItem      = currentNode;
+        }
 }
 
 
