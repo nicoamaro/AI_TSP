@@ -6,11 +6,10 @@ int main(int argc, char* argv[])
   char importText[1024];
   int cityNum, len;
   char* delimiter;
-  listNode openList;
-  listNode closedList;
-  
+  listNode* openList;
+  listNode* closedList;
 
-  if(argc != 2)
+    if(argc != 2)
   {
     printf("Debe pasar el archivo como parámetro\n");
     return 1;
@@ -25,23 +24,29 @@ int main(int argc, char* argv[])
   initializeCity(cityArray, cityNum);
   fgets(importText, 1024, importFile);
   populateCity(cityArray, cityNum, importText);
-  TSP(cityArray, cityNum, &openList, &closedList);
+  openList = malloc(sizeof (listNode));
+  TSP(cityArray, cityNum, openList, closedList);
   return 0;
 }
 
 int findMinimumDistances(city* cityArray, int* dist, int cityNum)
 {
-  int distance = 0;
+  int distance = 0, min1=0, min2=0;
   for(int i = 0; i < cityNum; i++)
     {
-      dist[i] = cityArray[i].distance[0];
+      min1 = cityArray[i].distance[0];
+      min2 = min1;
       for(int j = 0; j<cityNum-1; j++)
         {
-          if (dist[i] > cityArray[i].distance[j])
-            dist[i] = cityArray[i].distance[j];
+          if (min1 >= cityArray[i].distance[j])
+            {
+              min2 = min1;
+              min1 = cityArray[i].distance[j];
+            }
         }
+      dist[i] = (min1+min2)/2;
       distance += dist[i];
-    }
+     }
   return (distance);
 }
 
@@ -98,7 +103,7 @@ void populateCity(city* cityArray, int cityNum, char* data)
 
 void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 {
-  int startNode = cityNum-1, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
+  int startNode = cityNum-1, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0, h=0;
   listNode* currentNode;
   listNode* fatherNode = openList;
   listNode* previousNode = openList;
@@ -107,39 +112,37 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   int minimumDistancesArray[cityNum];
   int minDistance = findMinimumDistances(cityArray, minimumDistancesArray, cityNum);
   printf("Distancia minima = %d\n",minDistance);
-  // GOAL = (openList->idCurrentCity == startNode && depth == cityNum);
   //Empiezo con el primer nodo
   //Configuro el primer nodo Lista abierta
   printf("START NODE = %d\n",cityArray[startNode].id);
   openList->idCurrentCity = startNode;
   openList->cost = 0;
- 
   #ifdef HEURISTICS_ON
   openList->heuristic = minDistance;
   #else
   openList->heuristic = 0;
   #endif
-  
   openList->previousListItem = NULL;
   openList->nextListItem = NULL;
   openList->father = NULL;
+
   //Lista cerrada
   closedList  = NULL; //"lista cerrada vacia"
 
   //Salgo cuando lista esta vacia con error o encuentro GOAL
-  while(openList)//for(int i=0;i<20;i++)//while(openList)
+  while(openList)//for(int i=0;i<3;i++)//while(openList)
   {
     NA++;
     //printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
     fatherNode = openList; //father Node primer elemento de openlist
     currentNode = fatherNode;//currentNode para recorrer el camino de parents
-    while(previousNode->nextListItem) //previousNode tiene que ser el ultimo elemenot de openList
+    while(previousNode->nextListItem) //previousNode tiene que ser el ultimo elemento de openList
       {
         previousNode = previousNode->nextListItem;
       }
     
     ////////BUSCAMOS CAMINO RECORRIDO SIGUIENDO LOS NODOS FATHER
-    ////////////////////
+    //////////////////// SE PUEDE PASAR A UNA FUNCION APARTE
     depth = 0; //reseteo contador de profundidad
     path[depth] = currentNode->idCurrentCity; //Primer elemento de camino es ciudad actual
     depth++;
@@ -173,19 +176,19 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         printf("\nNodos Abiertos: %d\n\n",NA);
         //Liberar memoria
         freeMemory(openList);
-        //freeMemory(closedList); //ERROR...
+        freeMemory(closedList);
         return;
       }
     //////////////////// SI NO ES NODO GOAL ABRIMOS, INCLUIMOS NUEVOS NODOS AL FINAL
     // DE LISTA ABIERTA ////////////////////////////////////////
-    
+    h = H(fatherNode,minimumDistancesArray, minDistance, depth, path); // En este caso h es igual para todos los nodos hijos
     if(depth == cityNum)//Si estoy en el ultimo nodo agrego solo el nodo GOAL
       {
         currentNode = malloc(sizeof(listNode));
         Node = startNode;
         if(fatherNode->idCurrentCity < Node)
           Node -= 1;
-        agregarItem(currentNode,cityArray,cityNum,Node,fatherNode,previousNode, minimumDistancesArray, minDistance, depth, path);
+        agregarItem(currentNode,cityArray,cityNum,Node,fatherNode,previousNode,h);
         previousNode = currentNode;
       }
     else
@@ -193,7 +196,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         for(int j = 0; j < cityNum -1; j++)
           {
             currentCity = cityArray[fatherNode->idCurrentCity].nextCity[j];
-            for(int k = 0; k < depth; k++)
+            for(int k = 0; k < depth; k++) // Se puede mejorar esta busqueda?
               {
                 if (currentCity == path[k])
                   {
@@ -204,10 +207,11 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
             if (!cityFlag) //Si no esta en el camino recorrido agrego el nodo
               {
                 currentNode = malloc(sizeof(listNode));
-                agregarItem(currentNode,cityArray,cityNum,j,fatherNode,previousNode, minimumDistancesArray, minDistance, depth, path);
+                agregarItem(currentNode,cityArray,cityNum,j,fatherNode,previousNode,h);
                 previousNode = currentNode;
               }
-            cityFlag = 0;
+            else
+              cityFlag = 0;
           }
       }
     ////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +220,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     openList = fatherNode->nextListItem; //Cambio primer item de lista abierta
     openList->previousListItem = NULL; 
     currentNode = closedList;
-    if(closedList)
+    if(closedList) //Se pude obviar esto???
       {
         while(currentNode->nextListItem)
           {
@@ -228,9 +232,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     else //Si no hay ningun nodo en Lista CERRADA
       {
         closedList = fatherNode;
-        fatherNode->previousListItem = NULL; //Al pedo?
-        fatherNode->father = NULL; // Al pedo?
-      }
+       }
     fatherNode->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -257,7 +259,6 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   //SI SALGO DEL WHILE POR ACA NO ENCONTRE EL GOAL!!!!!!
   printf("\n\n****************************************************************************\n\n");
   printf("ERROR!! NO SE ENCONTRO SOLUCION.\n");
-
 }
 
 int F(listNode* current, int costToMe, int costToMyFather)
@@ -266,21 +267,21 @@ int F(listNode* current, int costToMe, int costToMyFather)
   return  G;// + H(current) ;
 }
 
-int H(int* dist, int minDistance, int depth, int* path)
+
+int H(listNode* fatherNode, int* dist, int minDistance, int depth, int* path)
 {
   #ifdef HEURISTICS_ON
-  int h = minDistance;
-  for(int i = 0; i < depth; i++)
-    {
-      h -= dist[path[i]];
-    }
+  int h = fatherNode->heuristic - dist[fatherNode->idCurrentCity];
+  //for(int i = 0; i < depth; i++)
+  //{
+  //  h -= dist[path[i]];
+  //}
   return (h);
 #endif /* CON HEURISTICA */
   return 0;
-  
 }
 
-void reordenarOpenList(listNode* openList)
+void reordenarOpenList(listNode* openList)//Se puede optimizar?
 {
   listNode *moving;
   listNode *current;
@@ -364,12 +365,15 @@ void printList(listNode* a)
 }
 
 
-void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode, int *dist,  int minDistance, int depth, int* path )
+void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode, int h)
 {
+  int costToMe = cityArray[fatherNode->idCurrentCity].distance[j];
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
-  //currentNode->   cost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->cost);
-  currentNode->   cost         = fatherNode->cost + cityArray[fatherNode->idCurrentCity].distance[j];
-  currentNode->   heuristic         =  H(dist, minDistance, depth, path); // En este caso es para todos los nodos hijos igual, asi que lo puedo calcular afuera una sola vez...
+  currentNode->   cost         = fatherNode->cost + costToMe;
+  if((h+costToMe) < fatherNode->heuristic)
+    currentNode-> heuristic         = fatherNode->heuristic - costToMe;
+  else
+    currentNode->   heuristic         = h;
   currentNode->   father            = fatherNode;
   currentNode->   previousListItem  = previousNode;
   currentNode->   nextListItem      = NULL;
@@ -418,10 +422,8 @@ void freeMemory(listNode* a)
       a = a->nextListItem;
       if (a->previousListItem) //Necesario?
         {
-          // printf("Liberando\n");
           free(a->previousListItem);
         }
     }
-  //printf("Liberando ultimo\n");
     free(a);
 }
