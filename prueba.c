@@ -84,9 +84,30 @@ void switchItems (listNode* a, listNode* b){
     aux->nextListItem = b->nextListItem;
     aux->prevListItem = b->prevListItem;
 
-    popItem(b);
-    popItem(a);
+    if(a->prevListItem == NULL && a->nextListItem == b){ //El caso en que A sea contiguo de B y sean los primeros dos
+        popItem(a);
+        putItemAfter(a,b);
+        return;
+    }
 
+    if(b->prevListItem == NULL && b->nextListItem == a){
+        popItem(b);
+        putItemAfter(b,a);
+        return;
+    }
+
+    if(a->nextListItem == NULL && a->prevListItem == b){
+        popItem(a);
+        putItemBefore(a,b);
+        return;
+    }
+    if(b->nextListItem == NULL && b->prevListItem == a){
+        popItem(b);
+        putItemBefore(b,a);
+        return;
+    }
+
+    popItem(b);
     if( NULL != a->nextListItem && b != a->nextListItem){
         putItemBefore(b,a->nextListItem);
     }else if(b != a->prevListItem){
@@ -95,11 +116,14 @@ void switchItems (listNode* a, listNode* b){
         putItemAfter(b, a);
     }
 
+    popItem(a);
     if( NULL != aux->nextListItem && a != aux->nextListItem){
+        //printf("entro aca\n" );
         putItemBefore(a,aux->nextListItem);
     }else if(a != aux->prevListItem){
         putItemAfter(a, aux->prevListItem);
     }else{
+        printf("entro aca\n" );
         putItemAfter(a, b);
     }
 }
@@ -153,17 +177,38 @@ listNode* orderAZ(listNode* a){
 
     while(NULL != a->nextListItem){
         b = a->nextListItem;
-        printf("a: %d\n", a->totalCost);
+        //printf("a: %d\n", a->totalCost);
         while (NULL != b){
 
             if (a->totalCost > b-> totalCost){
-                printf("\ta: %d\tb: %d\ta>b\n",a->totalCost, b->totalCost);
+                //printf("\ta: %d\tb: %d\ta>b\n",a->totalCost, b->totalCost);
                 switchItems(a,b);
                 aux=a;
                 a=b;
                 b=aux;
-            }else{
-                printf("\ta: %d\tb: %d\n",a->totalCost, b->totalCost);
+            }
+            b = b->nextListItem;
+        }
+        printList(searchFirst(a));
+        a = a->nextListItem;
+    }
+    return searchFirst(a);
+}
+listNode* orderZA(listNode* a){
+    listNode *b = a->nextListItem;
+    listNode *aux;
+
+    while(NULL != a->nextListItem){
+        b = a->nextListItem;
+        //printf("a: %d\n", a->totalCost);
+        while (NULL != b){
+
+            if (a->totalCost < b-> totalCost){
+                //printf("\ta: %d\tb: %d\ta>b\n",a->totalCost, b->totalCost);
+                switchItems(a,b);
+                aux=a;
+                a=b;
+                b=aux;
             }
             b = b->nextListItem;
         }
@@ -258,7 +303,7 @@ int main(int argc, char* argv[]){
     reversePrintList(searchLast(c));
     printf("----------------------\n");
 
-    switchItems(searchLast(c)->prevListItem,searchLast(c));
+    switchItems(searchLast(c),searchLast(c)->prevListItem);
     printf("\nCambiamos dos ultimos\n");
     printf("----------------------\n");
     printList(searchFirst(c));
@@ -276,14 +321,22 @@ int main(int argc, char* argv[]){
 
 
 
-    /*a=orderAZ(searchFirst(c));
+    a=orderAZ(searchFirst(c));
     printf("\nOrdenamos AZ\n");
     printf("----------------------\n");
     printList(searchFirst(c));
     printf("----------------------\n");
     reversePrintList(searchLast(c));
     printf("----------------------\n");
-*/
+
+    a=orderZA(searchFirst(c));
+    printf("\nOrdenamos ZA\n");
+    printf("----------------------\n");
+    printList(searchFirst(c));
+    printf("----------------------\n");
+    reversePrintList(searchLast(c));
+    printf("----------------------\n");
+
 
 
 }
