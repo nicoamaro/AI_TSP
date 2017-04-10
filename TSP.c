@@ -32,14 +32,16 @@ int main(int argc, char* argv[])
 
 int findMinimumDistances(city* cityArray, int* dist, int cityNum)
 {
-  int distance = 0;
+  int distance = 0, previous = 0;
   for(int i = 0; i < cityNum; i++)
     {
       dist[i] = cityArray[i].distance[0];
       for(int j = 0; j<cityNum-1; j++)
         {
-          if (dist[i] > cityArray[i].distance[j])
-            dist[i] = cityArray[i].distance[j];
+          if (dist[i] > cityArray[i].distance[j] && previous != j)
+            {
+              dist[i] = cityArray[i].distance[j];
+            }
         }
       distance += dist[i];
     }
@@ -99,26 +101,28 @@ void populateCity(city* cityArray, int cityNum, char* data)
 
 void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 {
-  int startNode = cityNum-1, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
+  int startNode = 3, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
   listNode* currentNode;
   listNode* fatherNode = openList;
   int path[cityNum]; //reservo un vector para guardar el camino recorrido
   //Generar vector de distancias minimas
   int minimumDistancesArray[cityNum];
   int minDistance = findMinimumDistances(cityArray, minimumDistancesArray, cityNum);
+#ifdef DEBUG
   printf("Distancia minima = %d\n",minDistance);
   // GOAL = (openList->idCurrentCity == startNode && depth == cityNum);
   //Empiezo con el primer nodo
   //Configuro el primer nodo Lista abierta
   printf("START NODE = %d\n",cityArray[startNode].id);
+#endif
   openList->idCurrentCity = startNode;
   openList->cost = 0;
  
-  #ifdef HEURISTICS_ON
+#ifdef HEURISTICS_ON
   openList->heuristic = minDistance;
-  #else
+#else
   openList->heuristic = 0;
-  #endif
+#endif
   
   openList->previousListItem = NULL;
   openList->nextListItem = NULL;
@@ -152,12 +156,14 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     if(openList->idCurrentCity == startNode && depth > 1) // Encontre GOAL!!!!
       {
         printf("\n\n************************* GOAL  ******************************************\n\n");
-        /* printf("------------------------------------------------------\n\n"); */
-        /* printf("---------Open List Desordenada nivel %d----------------\n",NA); */
-        /* printList(openList); */
-        /* printf("------------------------------------------------------\n\n"); */
-        /* printf("---------Closed  List Desordenada nivel %d----------------\n",NA); */
-        /* printList(closedList); */
+#ifdef DEBUG
+        printf("------------------------------------------------------\n\n"); 
+        printf("---------Open List Desordenada nivel %d----------------\n",NA);
+        printList(openList);
+        printf("------------------------------------------------------\n\n");
+        printf("---------Closed  List Desordenada nivel %d----------------\n",NA);
+        printList(closedList);
+#endif
         printf("Total COST = %d\n",openList->cost);
         printf("Path: ");
         while(depth)
@@ -171,8 +177,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         freeMemory(closedList);
         return;
       }
-    //////////////////// SI NO ES NODO GOAL ABRIMOS, INCLUIMOS NUEVOS NODOS AL FINAL
-    // DE LISTA ABIERTA ////////////////////////////////////////
+    //////////////////// SI NO ES NODO GOAL ABRIMOS, INCLUIMOS NUEVOS NODOS EN ORDEN ////////////////////////////////////////
     
     if(depth == cityNum)//Si estoy en el ultimo nodo agrego solo el nodo GOAL
       {
@@ -180,7 +185,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         Node = startNode;
         if(fatherNode->idCurrentCity < Node)
           Node -= 1;
-        agregarItem(currentNode,cityArray,cityNum,Node,fatherNode, minimumDistancesArray, minDistance, depth, path);
+        agregarItem(currentNode,cityArray,Node,fatherNode, minimumDistancesArray);
         
       }
     else
@@ -199,7 +204,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
             if (!cityFlag) //Si no esta en el camino recorrido agrego el nodo
               {
                 currentNode = malloc(sizeof(listNode));
-                agregarItem(currentNode,cityArray,cityNum,j,fatherNode, minimumDistancesArray, minDistance, depth, path);
+                agregarItem(currentNode,cityArray,j,fatherNode, minimumDistancesArray);
                 
               }
             cityFlag = 0;
@@ -259,7 +264,7 @@ int F(listNode* current, int costToMe, int costToMyFather)
   return  G;// + H(current) ;
 }
 
-int H(int* dist, int minDistance, int depth, int* path)
+int H(int* dist, int minDistance, int depth, int* path)//ES CUALQUIERA ESTO, NO SE USA
 {
   #ifdef HEURISTICS_ON
   int h = minDistance;
@@ -357,14 +362,17 @@ void printList(listNode* a)
 }
 
 
-void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, int *dist,  int minDistance, int depth, int* path )
+void agregarItem(listNode* currentNode,city* cityArray, int j, listNode* fatherNode, int *dist)
 {
   listNode *pivotNode = fatherNode;
   listNode *prevNode = NULL;
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
-  //currentNode->   cost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->cost);
   currentNode->   cost              = fatherNode->cost + cityArray[fatherNode->idCurrentCity].distance[j];
-  currentNode->   heuristic         =  H(dist, minDistance, depth, path); // En este caso es para todos los nodos hijos igual, asi que lo puedo calcular afuera una sola vez...
+#ifdef HEURISTICS_ON
+  currentNode->   heuristic         = fatherNode->heuristic - dist[currentNode->idCurrentCity];//Le restamos la distancia minima del nodo a la heuristica del nodo padre
+#else
+  currentNode->   heuristic         = 0;
+#endif
   currentNode->   father            = fatherNode;
   int currentCost = currentNode->cost + currentNode->heuristic;
   while(pivotNode->nextListItem)//Recorro la lista hasta encontrar el lugar donde insertar el nodo

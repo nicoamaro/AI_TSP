@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define HEURISTICS_ON
+//#define DEBUG
 
 typedef struct {
   int id;
@@ -29,7 +30,7 @@ int H(int* dist, int minDistance, int depth, int* path);
 void reordenarOpenList(listNode* openList);
 void switchItems(listNode* a, listNode* b);
 void printList(listNode* a);
-void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode,  int* dist, int minDistance, int depth, int* path);
+void agregarItem(listNode* currentNode,city* cityArray, int j, listNode* fatherNode,  int* dist);
 void tacharRepetidos(listNode* openList);
 void borrarItem (listNode* a);
 void freeMemory (listNode*a);
