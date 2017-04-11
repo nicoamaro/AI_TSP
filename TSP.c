@@ -384,10 +384,11 @@ void agregarItem(listNode* currentNode,city* cityArray, int j, listNode* fatherN
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
   currentNode->   cost              = fatherNode->cost + costToMe;
 #ifdef HEURISTICS_ON
-  if(costToMe >= dist[currentNode->idCurrentCity]) //Si el costo es mayor o igual al segundo min
-    currentNode->   heuristic         = fatherNode->heuristic - dist[currentNode->idCurrentCity];//Le restamos la distancia minima del nodo a la heuristica del nodo padre
-  else
-    currentNode->   heuristic         = fatherNode->heuristic - costToMe; //Si no le resto el costo para que h sea consistente.
+  int h0 = fatherNode->heuristic - dist[currentNode->idCurrentCity];
+  int h1 = costToMe - dist[currentNode->idCurrentCity];
+  if (h1 < 0)
+    h1 = -h1;
+  currentNode->heuristic = h0+h1;
 #else
   currentNode->   heuristic         = 0;
 #endif
