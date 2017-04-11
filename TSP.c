@@ -15,6 +15,9 @@ int main(int argc, char* argv[])
     printf("Debe pasar el archivo como parámetro\n");
     return 1;
   }
+  //********** EMPIEZO A CONTAR TIEMPO DESDE ACA **********
+  clock_t startTime = clock();
+  
   importFile = fopen(argv[1], "r");
   fgets(importText, 1024, importFile);
   delimiter = strchr(importText,';');
@@ -27,6 +30,10 @@ int main(int argc, char* argv[])
   populateCity(cityArray, cityNum, importText);
   openList = malloc(sizeof (listNode));
   TSP(cityArray, cityNum, openList, closedList);
+  clock_t endTime = clock();
+  //********** TERMINE DE CONTAR TIEMPO ACA **********
+  double executionTime = (double)1000*(endTime - startTime) / CLOCKS_PER_SEC;
+  printf("Tiempo de ejecucion = %f ms\n\n", executionTime);
   return 0;
 }
 
@@ -169,8 +176,8 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
     
     if(openList->idCurrentCity == startNode && depth > 1) // Encontre GOAL!!!!
       {
-        printf("\n\n************************* GOAL  ******************************************\n\n");
 #ifdef DEBUG
+        printf("\n\n************************* GOAL  ******************************************\n\n");
         printf("------------------------------------------------------\n\n"); 
         printf("---------Open List Desordenada nivel %d----------------\n",NA);
         printList(openList);
@@ -178,14 +185,14 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         printf("---------Closed  List Desordenada nivel %d----------------\n",NA);
         printList(closedList);
 #endif
-        printf("Total COST = %d\n",openList->cost);
-        printf("Path: ");
+        printf("\nPath: ");
         while(depth)
           {
             printf("%d;",path[depth-1]);
             depth--;
           }
-        printf("\nNodos Abiertos: %d\n\n",NA);
+        printf("\nTotal COST = %d\n",openList->cost);
+        printf("Nodos Abiertos: %d\n",NA);
         //Liberar memoria
         freeMemory(openList);
         freeMemory(closedList);
