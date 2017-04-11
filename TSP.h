@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #define HEURISTICS_ON
 //#define DEBUG
 

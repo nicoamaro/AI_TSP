@@ -32,18 +32,32 @@ int main(int argc, char* argv[])
 
 int findMinimumDistances(city* cityArray, int* dist, int cityNum)
 {
-  int distance = 0, previous = 0;
-  for(int i = 0; i < cityNum; i++)
+  int distance = 0, previous = 0, i = 0,j = 0;
+  int min1, min2;
+  for(i = 0; i < cityNum; i++)
     {
-      dist[i] = cityArray[i].distance[0];
-      for(int j = 0; j<cityNum-1; j++)
+      min2 = cityArray[i].distance[0];
+      min1 = cityArray[i].distance[cityNum-2];
+      j = cityNum-3;
+      while(j)
         {
-          if (dist[i] > cityArray[i].distance[j] && previous != j)
+          if (min1 > cityArray[i].distance[j])
             {
-              dist[i] = cityArray[i].distance[j];
+              if(min2>min1)
+                min2 = min1;
+              min1 = cityArray[i].distance[j];
             }
+          else
+            if (min2 > cityArray[i].distance[j])
+                min2 = cityArray[i].distance[j];
+          j--;
         }
-      distance += dist[i];
+      
+      if(min1<min2)
+        dist[i] = min2; // Guardo en el vector el segundo mas chico
+      else
+        dist[i] = min1;
+      distance += (min1+min2)/2; //Para la distancia uso el promedio de los dos minimos
     }
   return (distance);
 }
@@ -366,13 +380,19 @@ void agregarItem(listNode* currentNode,city* cityArray, int j, listNode* fatherN
 {
   listNode *pivotNode = fatherNode;
   listNode *prevNode = NULL;
+  int costToMe = cityArray[fatherNode->idCurrentCity].distance[j];
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
-  currentNode->   cost              = fatherNode->cost + cityArray[fatherNode->idCurrentCity].distance[j];
+  currentNode->   cost              = fatherNode->cost + costToMe;
 #ifdef HEURISTICS_ON
-  currentNode->   heuristic         = fatherNode->heuristic - dist[currentNode->idCurrentCity];//Le restamos la distancia minima del nodo a la heuristica del nodo padre
+  if(costToMe >= dist[currentNode->idCurrentCity]) //Si el costo es mayor o igual al segundo min
+    currentNode->   heuristic         = fatherNode->heuristic - dist[currentNode->idCurrentCity];//Le restamos la distancia minima del nodo a la heuristica del nodo padre
+  else
+    currentNode->   heuristic         = fatherNode->heuristic - costToMe; //Si no le resto el costo para que h sea consistente.
 #else
   currentNode->   heuristic         = 0;
 #endif
+  if (currentNode->heuristic < 0) //La heuristica tiene que ser siempre >= 0
+    currentNode->heuristic = 0;
   currentNode->   father            = fatherNode;
   int currentCost = currentNode->cost + currentNode->heuristic;
   while(pivotNode->nextListItem)//Recorro la lista hasta encontrar el lugar donde insertar el nodo
