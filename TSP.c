@@ -1,4 +1,5 @@
 #include "TSP.h"
+#include "listNodeColaDoble.h"
 
 int main(int argc, char* argv[])
 {
@@ -6,16 +7,15 @@ int main(int argc, char* argv[])
   char importText[1024];
   int cityNum, len;
   char* delimiter;
-  listNode openList;
-  listNode closedList;
-
-
+  listNode* openList;
+  listNode* closedList;
 
   if(argc != 2)
   {
     printf("Debe pasar el archivo como parámetro\n");
     return 1;
   }
+
   importFile = fopen(argv[1], "r");
   fgets(importText, 1024, importFile);
   delimiter = strchr(importText,';');
@@ -27,7 +27,9 @@ int main(int argc, char* argv[])
   initializeCity(cityArray, cityNum);
   fgets(importText, 1024, importFile);
   populateCity(cityArray, cityNum, importText);
-  TSP(cityArray, cityNum, &openList, &closedList);
+
+
+  TSP(cityArray, cityNum, openList, closedList);
   return 0;
 }
 
@@ -41,7 +43,6 @@ void initializeCity(city* cityArray, int cityNum)
   }
   return;
 }
-
 
 void populateCity(city* cityArray, int cityNum, char* data)
 {
@@ -81,64 +82,80 @@ void populateCity(city* cityArray, int cityNum, char* data)
 
 }
 
-
 void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 {
-  int startNode = 0;
-  listNode* currentNode;
-  listNode* fatherNode = openList;
-  listNode* previousNode = openList;
-
-  //Empiezo con el primer nodo
-  //Configuro el primer nodo
-  openList->idCurrentCity=cityArray[startNode].id;
-  openList->totalCost = 0;
-  openList->previousListItem = NULL;
-
-  for(int i=0;i<2;i++)//for(int i=0;i<cityNum-1;i++)
-  {
-    printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
-    fatherNode = openList;
-    closedList -> nextListItem = fatherNode;
-
-    for(int j = 0; j < cityNum -1; j++)
+    int startNode = 0;
+    openList = createItem();
+    putItemInfo(openList, cityArray[startNode].id, 0);
+    listNode* currentNode = openList;
+    listNode* fatherNode;
+    listNode* previousNode = openList;
+    int i=0;
+    printf("UNO!!!!!\n" );
+    while(!checkIfLastNode(currentNode, cityNum) )   //for(int i=0;i<3;i++)
     {
-      currentNode = malloc(sizeof(listNode));
-      agregarItem(currentNode,cityArray,cityNum,j,fatherNode,previousNode );
-      previousNode = currentNode;
+        printf("\n\n************************* Nivel %d ******************************************\n\n",i+1);
+        fatherNode = openList;
+        for(int j = 0; j < cityNum -1; j++)
+        {
+            currentNode = createItem();
+            putItemAfter(currentNode,previousNode);
+            putItemAsChildOf(fatherNode,currentNode);
+
+            putItemInfo(currentNode, cityArray[fatherNode->idCurrentCity].nextCity[j], F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j]) );
+            //FIXME: Estoy pasando mal el ID number de city
+            previousNode = currentNode;
+
+        }
+        openList = fatherNode->nextListItem;
+        popItem(fatherNode);
+        if (i==0){
+            closedList = fatherNode;
+            cleanItem(fatherNode);
+        }else{
+            putItemAfter(fatherNode,searchLast(closedList));
+        }
+
+        printf("------------------------------------------------------\n\n");
+        printf("---------Open List Desordenada nivel %d----------------\n",i+1);
+        printList(openList);
+        printf("------------------------------------------------------\n\n");
+
+        printf("--Open List Ordenada y sin caminos repetidos nivel %d--\n",i+1);
+        searchForRedundancy(openList,cityNum);
+        printList(openList);
+        printf("------------------------------------------------------\n\n");
+
+        printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
+        orderAZ(openList);
+        openList = searchFirst(openList);
+        printList(openList);
+        printf("------------------------------------------------------\n\n");
+
+        //printf("-----------Open List Ordenada y Tachada nivel %d-------\n",i+1);
+        //tacharRepetidos(openList);
+        //printList(openList);
+        //printf("------------------------------------------------------\n\n");
+
+        printf("-------------Closed List nivel %d----------------------\n",i+1);
+        printList(closedList);
+        printf("------------------------------------------------------\n\n");
+        i++;
 
     }
-    openList = fatherNode->nextListItem;
-    printf("------------------------------------------------------\n\n");
-    printf("---------Open List Desordenada nivel %d----------------\n",i+1);
-    printList(openList);
-    printf("------------------------------------------------------\n\n");
-    printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
-    reordenarOpenList(openList);
-    printList(openList);
-    printf("------------------------------------------------------\n\n");
-    printf("-----------Open List Ordenada y Tachada nivel %d-------\n",i+1);
-    tacharRepetidos(openList);
-    printList(openList);
-    printf("------------------------------------------------------\n\n");
-    //Termine de armar la lista de este nivel
-    //Cierro el nodo que se expandio
-    closedList->nextListItem->nextListItem=NULL;
-    printf("-------------Closed List nivel %d----------------------\n",i+1);
-    printList(closedList);
-    printf("------------------------------------------------------\n\n");
-
-
-  }
-
-  printf("\n\n****************************************************************************\n\n");
+    printf("\n\n****************************************************************************\n\n");
+    printf("-------------Llegamos al final!----------------------\n");
+    printf("Total Cost: %d\n", openList->totalCost);
+    printFatherPath(openList);
+    printf("\n****************************************************************************\n\n");
 
 }
 
-int F(listNode* current, int costToMe, int costToMyFather)
+int F(listNode* current, int costToMe)
 {
-  int G = costToMe + costToMyFather;
-  return  G + H(current) ;
+    int costToMyFather = current->father->totalCost;
+    int G = costToMe + costToMyFather;
+    return  G + H(current);
 }
 
 int H(listNode* current)
@@ -146,117 +163,62 @@ int H(listNode* current)
   return 0;
 }
 
-void reordenarOpenList(listNode* openList)
-{
-  listNode *moving;
-  listNode *current;
-
-  current = openList;
-
-  while(NULL!=current)
-  {
-    moving = current->nextListItem;
-    while (NULL!= moving)
-    {
-      if(current->totalCost > moving->totalCost)
-      {
-
-        switchItems(current, moving);
-      }
-      moving = moving->nextListItem;
-    }
-    current = current -> nextListItem;
-  }
-}
-
-void switchItems(listNode* a, listNode* b)
-{
-  listNode* aux= malloc (sizeof(listNode));
-
-  /*aux->idCurrentCity= a->idCurrentCity;
-  aux->totalCost= a->totalCost;
-  aux->father = a->father;
-
-  a->idCurrentCity= b->idCurrentCity;
-  a->totalCost= b->totalCost;
-  a->father = b->father;
-
-  b->idCurrentCity= aux->idCurrentCity;
-  b->totalCost= aux->totalCost;
-  b->father = aux->father;
-  */
-
-  aux->previousListItem = a->previousListItem;
-  aux -> nextListItem = a->nextListItem;
-
-  a->nextListItem = b-> nextListItem;
-  a->previousListItem = b->previousListItem;
-
-  b->nextListItem = aux -> nextListItem;
-  b->previousListItem = aux -> previousListItem;
-
-  (a->nextListItem)->previousListItem = a;
-  (b->nextListItem)->previousListItem = b;
-
-  (a->previousListItem)->nextListItem = a;
-  (b->previousListItem)->nextListItem = b;
-  //aux=a;
-  //a=b;
-  //b=aux;
-}
-
-void printList(listNode* a)
-{
-  listNode* currentNode = a;
-  while (NULL != currentNode)
-  {
-    printf("id=%d, cost=%d, father=%d\n",currentNode->idCurrentCity, currentNode->totalCost,currentNode->father);
-    currentNode= currentNode->nextListItem;
-  }
-}
-
-
-void agregarItem(listNode* currentNode,city* cityArray,int cityNum, int j, listNode* fatherNode, listNode* previousNode )
-{
-  currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
-  currentNode->   totalCost         = F(currentNode,cityArray[fatherNode->idCurrentCity].distance[j], fatherNode->totalCost);
-  currentNode->   father            = fatherNode->idCurrentCity;
-  currentNode->   previousListItem  = previousNode;
-  currentNode->   nextListItem      = NULL;
-  previousNode->  nextListItem      = currentNode;
-}
-
-
-
 void tacharRepetidos(listNode* openList)
 {
-  listNode *moving;
-  listNode *current;
+    listNode *moving;
+    listNode *current;
 
-  current = openList;
+    current = openList;
 
 
-  while(NULL!=current)
-  {
-    moving = current->nextListItem;
-    while (NULL!= moving)
+    while(NULL!=current)
     {
-      if(current->idCurrentCity == moving->idCurrentCity)
-      {
-        borrarItem(moving);
-      }
-      moving = moving->nextListItem;
+        moving = current->nextListItem;
+        while (NULL!= moving)
+        {
+            if(current->idCurrentCity == moving->idCurrentCity)
+            {
+                popItem(moving);
+                free(moving);
+            }
+            moving = moving->nextListItem;
+        }
+        current = current -> nextListItem;
     }
-    current = current -> nextListItem;
-  }
 }
 
-void borrarItem(listNode* a)
-{
-  a->previousListItem->nextListItem = a->nextListItem;
-  if(NULL!=a->nextListItem)
-  {
-    a->nextListItem->previousListItem = a->previousListItem;
-  }
-  //free(aux);
+void searchForRedundancy(listNode* openList, int cityNum){
+    listNode *current = openList;
+    listNode *movingFather;
+
+    while (NULL != current) {
+        movingFather = current->father;
+        while(NULL != movingFather){
+            if (current->idCurrentCity == movingFather->idCurrentCity && !checkIfLastNode(current, cityNum) ){ //TODO:Agregar check si es el final del camino
+                popItem(current);
+                free(current);
+                return;
+            }
+            movingFather = movingFather->father;
+        }
+        current = current->nextListItem;
+    }
+}
+
+int checkIfLastNode(listNode* node,int cityNum){
+    int hops = 1;
+    if (NULL == node->father) {
+        return 0;
+    }
+
+    listNode *movingFather = node->father;
+
+    while(NULL != movingFather){
+        if ( node->idCurrentCity == movingFather->idCurrentCity && hops == cityNum ){
+            return 1;
+        }
+        hops++;
+        movingFather = movingFather->father;
+    }
+    return 0;
 }

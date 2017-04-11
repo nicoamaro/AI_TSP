@@ -1,3 +1,5 @@
 TSP
 prueba
 .DS_Store
+.gdbinit
+listNodeColaDoble.o

@@ -128,8 +128,6 @@ void switchItems (listNode* a, listNode* b){
     }
 }
 
-
-
 listNode* createItem(){
     listNode* new_item = malloc(sizeof(listNode));
     new_item->nextListItem = NULL;
