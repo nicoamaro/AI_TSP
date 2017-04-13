@@ -1,4 +1,14 @@
+/*
+ * TSP.c
+ *
+ *  Created on: April 1, 2017
+ *  Authors: Amaro Nicolas, Hernando Sebastian, Wajs Ezequiel
+ */
+
+
+/*Includes */
 #include "TSP.h"
+
 
 int main(int argc, char* argv[])
 {
@@ -6,10 +16,7 @@ int main(int argc, char* argv[])
   char importText[1024];
   int cityNum, len;
   char* delimiter;
-  listNode* openList;
-  listNode* closedList;
   
-
   if(argc != 2)
   {
     printf("Debe pasar el archivo como parámetro\n");
@@ -28,8 +35,7 @@ int main(int argc, char* argv[])
   initializeCity(cityArray, cityNum);
   fgets(importText, 1024, importFile);
   populateCity(cityArray, cityNum, importText);
-  openList = malloc(sizeof (listNode));
-  TSP(cityArray, cityNum, openList, closedList);
+  TSP(cityArray, cityNum);
   clock_t endTime = clock();
   //********** TERMINE DE CONTAR TIEMPO ACA **********
   double executionTime = (double)1000*(endTime - startTime) / CLOCKS_PER_SEC;
@@ -37,9 +43,23 @@ int main(int argc, char* argv[])
   return 0;
 }
 
+/*--------------------------------------------------------------------------------
+ * Function:    findMinimumDistances
+ *
+ * @brief       Calcula la distancia minima como la suma de los promedios de
+ *              las 2 distancias minimas de cada ciudad.
+ * 
+ * @param[in]	city* cityArray	- Array que contiene la info de todas las ciudades.
+ * @param[in]	int* dist       - Direccion de vector donde se van a guardar las 
+ *                                segundas minimas distancias de cada ciudad. 
+ * @param[in]	int cityNum     - Cantidad de ciudades.
+ *
+ *
+ * @return 	int distance    - Distancia minima calculada (h[0])
+ --------------------------------------------------------------------------------*/
 int findMinimumDistances(city* cityArray, int* dist, int cityNum)
 {
-  int distance = 0, previous = 0, i = 0,j = 0;
+  int distance = 0, i = 0,j = 0;
   int min1, min2;
   for(i = 0; i < cityNum; i++)
     {
@@ -69,6 +89,18 @@ int findMinimumDistances(city* cityArray, int* dist, int cityNum)
   return (distance);
 }
 
+/*--------------------------------------------------------------------------------
+ * Function:    initializeCity
+ *
+ * @brief       Reserva lugar en memoria del vector de ciudades y guarda su id.
+ * 
+ * @param[in]	city* cityArray	- Array donde se va a guardar info de todas las
+ *                                ciudades.
+ * @param[in]	int cityNum     - Cantidad de ciudades.
+ *
+ *
+ * @return 	NONE
+ --------------------------------------------------------------------------------*/
 void initializeCity(city* cityArray, int cityNum)
 {
   for(int i = 0; i < cityNum; i++)
@@ -81,6 +113,18 @@ void initializeCity(city* cityArray, int cityNum)
 }
 
 
+/*--------------------------------------------------------------------------------
+ * Function:    populateCity
+ *
+ * @brief       Completa el array de ciudades con la informacion pasada en data.
+ * 
+ * @param[in]	city* cityArray	- Array a completar con la info de todas las ciudades.
+ * @param[in]	int cityNum     - Cantidad de ciudades.
+ * @param[in]	char* data      - Puntero a inicio de informacion a guardar.
+ *
+ *
+ * @return 	NONE
+ --------------------------------------------------------------------------------*/
 void populateCity(city* cityArray, int cityNum, char* data)
 {
 
@@ -119,23 +163,36 @@ void populateCity(city* cityArray, int cityNum, char* data)
 
 }
 
-
-void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
+/*--------------------------------------------------------------------------------
+ * Function:    TSP
+ *
+ * @brief       Se encarga de aplicar el algoritmo A* para resolver TSP
+ * 
+ * @param[in]	city* cityArray	- Array que contiene la info de todas las ciudades.
+ * @param[in]	int cityNum     - Cantidad de ciudades.
+ *
+ *
+ * @return 	NONE
+ --------------------------------------------------------------------------------*/
+void TSP(city* cityArray, int cityNum)
 {
   int startNode = 3, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
   listNode* currentNode;
-  listNode* fatherNode = openList;
+  listNode* openList;
+  listNode* closedList;
+  listNode* fatherNode;
   int path[cityNum]; //reservo un vector para guardar el camino recorrido
   //Generar vector de distancias minimas
   int minimumDistancesArray[cityNum];
   int minDistance = findMinimumDistances(cityArray, minimumDistancesArray, cityNum);
 #ifdef DEBUG
   printf("Distancia minima = %d\n",minDistance);
-  // GOAL = (openList->idCurrentCity == startNode && depth == cityNum);
-  //Empiezo con el primer nodo
-  //Configuro el primer nodo Lista abierta
   printf("START NODE = %d\n",cityArray[startNode].id);
 #endif
+
+  //Empiezo con el primer nodo
+  //Configuro el primer nodo Lista abierta
+  openList = malloc(sizeof (listNode));
   openList->idCurrentCity = startNode;
   openList->cost = 0;
  
@@ -150,17 +207,18 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
   openList->father = NULL;
   //Lista cerrada
   closedList  = NULL; //"lista cerrada vacia"
+  fatherNode = openList;
 
   //Salgo cuando lista esta vacia con error o encuentro GOAL
-  while(openList)//for(int i=0;i<20;i++)//while(openList)
+  while(openList)
   {
-    NA++;
+    NA++;  //Contador de NODOS ABIERTOS
     fatherNode = openList; //father Node primer elemento de openlist
     currentNode = fatherNode;//currentNode para recorrer el camino de parents
         
     ////////BUSCAMOS CAMINO RECORRIDO SIGUIENDO LOS NODOS FATHER
     ////////////////////
-    depth = 0; //reseteo contador de profundidad
+    depth = 0; //reseteo contador de profundidad (CIUDADES VISITADAS)
     path[depth] = currentNode->idCurrentCity; //Primer elemento de camino es ciudad actual
     depth++;
     while(currentNode)
@@ -206,10 +264,10 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
         Node = startNode;
         if(fatherNode->idCurrentCity < Node)
           Node -= 1;
-        agregarItem(currentNode,cityArray,Node,fatherNode, minimumDistancesArray);
+        addNode(currentNode,cityArray,Node,fatherNode, minimumDistancesArray);
         
       }
-    else
+    else //Si no estoy en el ultimo nodo agrego todas las ciudades no visitadas.
       {
         for(int j = 0; j < cityNum -1; j++)
           {
@@ -225,7 +283,7 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
             if (!cityFlag) //Si no esta en el camino recorrido agrego el nodo
               {
                 currentNode = malloc(sizeof(listNode));
-                agregarItem(currentNode,cityArray,j,fatherNode, minimumDistancesArray);
+                addNode(currentNode,cityArray,j,fatherNode, minimumDistancesArray);
                 
               }
             cityFlag = 0;
@@ -279,94 +337,16 @@ void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList)
 
 }
 
-int F(listNode* current, int costToMe, int costToMyFather)
-{
-  int G = costToMe + costToMyFather;
-  return  G;// + H(current) ;
-}
 
-int H(int* dist, int minDistance, int depth, int* path)//ES CUALQUIERA ESTO, NO SE USA
-{
-  #ifdef HEURISTICS_ON
-  int h = minDistance;
-  for(int i = 0; i < depth; i++)
-    {
-      h -= dist[path[i]];
-    }
-  return (h);
-#endif /* CON HEURISTICA */
-  return 0;
-  
-}
-
-void reordenarOpenList(listNode* openList)
-{
-  listNode *moving;
-  listNode *current;
-
-  current = openList;
-
-  while(NULL!=current)
-  {
-    moving = current->nextListItem;
-    while (NULL!= moving)
-    {
-      if(current->cost+current->heuristic  > moving->cost+moving->heuristic)
-      {
-
-        switchItems(current, moving);
-      }
-      moving = moving->nextListItem;
-    }
-    current = current -> nextListItem;
-    if(NULL != current)
-    {
-      moving = current->nextListItem;
-    }
-  }
-}
-
-void switchItems(listNode* a, listNode* b)
-{
-  listNode* aux= malloc (sizeof(listNode));
-
-  aux->idCurrentCity= a->idCurrentCity;
-  aux->cost= a->cost;
-  aux->heuristic = a->heuristic;
-  aux->father = a->father;
-
-  a->idCurrentCity= b->idCurrentCity;
-  a->cost= b->cost;
-  a->heuristic = b->heuristic;
-  a->father = b->father;
-
-  b->idCurrentCity= aux->idCurrentCity;
-  b->cost= aux->cost;
-  b->heuristic = aux->heuristic;
-  b->father = aux->father;
-  /*
-
-  aux->previousListItem = a->previousListItem;
-  aux -> nextListItem = a->nextListItem;
-
-  a->nextListItem = b-> nextListItem;
-  a->previousListItem = b->previousListItem;
-
-  b->nextListItem = aux -> nextListItem;
-  b->previousListItem = aux -> previousListItem;
-
-  (a->nextListItem)->previousListItem = a;
-  (b->nextListItem)->previousListItem = b;
-
-  (a->previousListItem)->nextListItem = a;
-  (b->previousListItem)->nextListItem = b;
-  //aux=a;
-  //a=b;
-  //b=aux;
-*/
-  free(aux);
-}
-
+/*--------------------------------------------------------------------------------
+ * Function:    printList
+ *
+ * @brief       Imprime en pantalla todos los nodos de la lista con su info.
+ * 
+ * @param[in]	listNode* a	- Direccion de primer nodo de la lista a imprimir.
+ *
+ * @return 	NONE
+ --------------------------------------------------------------------------------*/
 void printList(listNode* a)
 {
   listNode* currentNode = a;
@@ -383,7 +363,21 @@ void printList(listNode* a)
 }
 
 
-void agregarItem(listNode* currentNode,city* cityArray, int j, listNode* fatherNode, int *dist)
+/*--------------------------------------------------------------------------------
+ * Function:    addNode
+ *
+ * @brief       Agrega un nodo a la lista en orden dependiendo del costo total.
+ * 
+ * @param[in]   listNode* currentNode - Direccion de nodo actual a agregar.
+ * @param[in]	city* cityArray	- Array que contiene la info de todas las ciudades.
+ * @param[in]   int  j          - Indice de ciudad actual en array para el nodo padre.
+ * @param[in]	listNode* fatherNode  - Direccion de nodo padre.
+ * @param[in]   int* dist       - Direccion de vector de distancias minimas.
+ *
+ *
+ * @return 	NONE
+ --------------------------------------------------------------------------------*/
+void addNode(listNode* currentNode,city* cityArray, int j, listNode* fatherNode, int *dist)
 {
   listNode *pivotNode = fatherNode;
   listNode *prevNode = NULL;
@@ -391,6 +385,7 @@ void agregarItem(listNode* currentNode,city* cityArray, int j, listNode* fatherN
   currentNode->   idCurrentCity     = cityArray[fatherNode->idCurrentCity].nextCity[j];
   currentNode->   cost              = fatherNode->cost + costToMe;
 #ifdef HEURISTICS_ON
+  // h[n] = h[n-1] - dist(min2)[currentCity] + |dist(n-1 a n) - dist(min2)[currentCity]|
   int h0 = fatherNode->heuristic - dist[currentNode->idCurrentCity];
   int h1 = costToMe - dist[currentNode->idCurrentCity];
   if (h1 < 0)
@@ -399,6 +394,7 @@ void agregarItem(listNode* currentNode,city* cityArray, int j, listNode* fatherN
 #else
   currentNode->   heuristic         = 0;
 #endif
+  // Si esta bien calculada h esto no deberia que chequearlo.
   if (currentNode->heuristic < 0) //La heuristica tiene que ser siempre >= 0
     currentNode->heuristic = 0;
   currentNode->   father            = fatherNode;
@@ -426,40 +422,17 @@ void agregarItem(listNode* currentNode,city* cityArray, int j, listNode* fatherN
 }
 
 
-
-void tacharRepetidos(listNode* openList)
-{
-  listNode *moving;
-  listNode *current;
-
-  current = openList;
-
-
-  while(NULL!=current)
-  {
-    moving = current->nextListItem;
-    while (NULL!= moving)
-    {
-      if(current->idCurrentCity == moving->idCurrentCity)
-      {
-        borrarItem(moving);
-      }
-      moving = moving->nextListItem;
-    }
-    current = current -> nextListItem;
-  }
-}
-
-void borrarItem(listNode* a)
-{
-  a->previousListItem->nextListItem = a->nextListItem;
-  if(NULL!=a->nextListItem)
-  {
-    a->nextListItem->previousListItem = a->previousListItem;
-  }
-  free(a);
-}
-
+/*--------------------------------------------------------------------------------
+ * Function:    freeMemory
+ *
+ * @brief       Libera la memoria de todos los nodos de la lista a partir del nodo
+ *              indicado.
+ * 
+ * @param[in]	listNode* a	- Direccion de primer nodo a partir del cual
+ *                                liberar memoria.
+ *
+ * @return 	NONE
+ --------------------------------------------------------------------------------*/
 void freeMemory(listNode* a)
 {
   while(a->nextListItem)
@@ -467,10 +440,8 @@ void freeMemory(listNode* a)
       a = a->nextListItem;
       if (a->previousListItem) //Necesario?
         {
-          // printf("Liberando\n");
           free(a->previousListItem);
         }
     }
-  //printf("Liberando ultimo\n");
-    free(a);
+  free(a);
 }

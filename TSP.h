@@ -1,11 +1,21 @@
+/*
+ * TSP.h
+ *
+ *  Created on: April 1, 2017
+ *  Authors: Amaro Nicolas, Hernando Sebastian, Wajs Ezequiel
+ */
+
+/* Includes */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#define HEURISTICS_ON
-//#define DEBUG
+/* Defines */
+#define HEURISTICS_ON  //Para implementar heuristica
+/* #define DEBUG */ //Para imprimir LISTAS ABIERTA y CERRADA y otra info
 
+/* Variable type Declarations */
 typedef struct {
   int id;
   int* nextCity;
@@ -23,16 +33,11 @@ typedef struct listNode{
 }listNode;
 
 
+/* Functions Declarations */
 void initializeCity(city* cityArray, int cityNum);
 void populateCity(city* cityArray, int cityNum, char* data);
-void TSP(city* cityArray, int cityNum, listNode* openList, listNode* closedList);
-int F(listNode* current, int costToMe, int costToMyFather);
-int H(int* dist, int minDistance, int depth, int* path);
-void reordenarOpenList(listNode* openList);
-void switchItems(listNode* a, listNode* b);
+void TSP(city* cityArray, int cityNum);
 void printList(listNode* a);
-void agregarItem(listNode* currentNode,city* cityArray, int j, listNode* fatherNode,  int* dist);
-void tacharRepetidos(listNode* openList);
-void borrarItem (listNode* a);
+void addNode(listNode* currentNode,city* cityArray, int j, listNode* fatherNode,  int* dist);
 void freeMemory (listNode*a);
 int findMinimumDistances (city* cityArray, int* dist, int cityNum);
