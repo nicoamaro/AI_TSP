@@ -13,7 +13,7 @@
 
 /* Defines */
 #define HEURISTICS_ON  //Para implementar heuristica
-/* #define DEBUG */ //Para imprimir LISTAS ABIERTA y CERRADA y otra info
+ #define DEBUG  //Para imprimir LISTAS ABIERTA y CERRADA y otra info
 
 /* Variable type Declarations */
 typedef struct {
@@ -32,12 +32,18 @@ typedef struct listNode{
   struct listNode* previousListItem;
 }listNode;
 
+typedef struct depthNode{
+  listNode* node;
+  struct depthNode* nextDepthNode;
+  struct depthNode* previousDepthNode;
+}depthNode;
+
 
 /* Functions Declarations */
-void initializeCity(city* cityArray, int cityNum);
-void populateCity(city* cityArray, int cityNum, char* data);
-void TSP(city* cityArray, int cityNum);
+void initializeCity(city* cityArray);
+void populateCity(city* cityArray, char* data);
+void TSP(city* cityArray);
 void printList(listNode* a);
-void addNode(listNode* currentNode,city* cityArray, int j, listNode* fatherNode,  int* dist);
+void addNode(city* cityArray, int j, listNode* fatherNode,  int* dist, int depth, int* histogram, depthNode** depthList);
 void freeMemory (listNode*a);
-int findMinimumDistances (city* cityArray, int* dist, int cityNum);
+int findMinimumDistances (city* cityArray, int* dist);
