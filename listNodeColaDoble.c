@@ -131,7 +131,8 @@ void switchItems (listNode* a, listNode* b){
     }
 }
 
-void putItemInfo(listNode* node, int idCurrentCity_data,int totalCost_data){
+void putItemInfo(listNode* node, int idCurrentCity_data,int totalCost_data, int distance_data){
+    node->distance = distance_data;
     node->idCurrentCity = idCurrentCity_data;
     node->totalCost = totalCost_data;
     return;
@@ -184,9 +185,10 @@ void printList(listNode* a){
 
 void printFatherPath(listNode* a){
     listNode* currentNode = a;
+
     while (NULL != currentNode)
     {
-        printf("id=%d, cost=%d\n",currentNode->idCurrentCity, currentNode->totalCost);
+        printf("id=%d, cost=%d\n",currentNode->idCurrentCity, currentNode->distance);
         currentNode= currentNode->father;
     }
 }

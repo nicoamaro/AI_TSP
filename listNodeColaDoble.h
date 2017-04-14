@@ -5,6 +5,7 @@
 typedef struct listNode{
   int idCurrentCity;
   int totalCost;
+  int distance;
 
   struct listNode* father;
 
@@ -25,7 +26,7 @@ void putItemAfter(listNode* new_element, listNode* prev_element);
 
 void putItemBefore(listNode* new_element, listNode* next_element);
 
-void putItemInfo(listNode* node, int idCurrentCity_data,int totalCost_data);
+void putItemInfo(listNode* node, int idCurrentCity_data,int totalCost_data, int distance_data);
 
 void putItemAsChildOf(listNode*father,listNode* child);
 
