@@ -180,14 +180,16 @@ void TSP(city* cityArray)
   int startNode = 3, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
   listNode* currentNode;
   listNode* openList;
-  listNode* closedList;
+  listNode* closedList = NULL;
   listNode* fatherNode;
+  listNode* ghostList = NULL;
   depthNode* depthList[cityNum];
 
   for(int i = 0; i < cityNum; i++) // inicializo mis listas de profundidad
     depthList[i] = NULL;
 
-  int path[cityNum]; //reservo un vector para guardar el camino recorrido
+  int path[cityNum+1]; //reservo un vector para guardar el camino recorrido
+  int histogram[cityNum];
   //Generar vector de distancias minimas
   int minimumDistancesArray[cityNum];
   int minDistance = findMinimumDistances(cityArray, minimumDistancesArray);
@@ -198,7 +200,7 @@ void TSP(city* cityArray)
 
   //Empiezo con el primer nodo
   //Configuro el primer nodo Lista abierta
-  openList = malloc(sizeof (listNode));
+  openList = (listNode*)malloc(sizeof (listNode));
   openList->idCurrentCity = startNode;
   openList->cost = 0;
 
@@ -211,8 +213,9 @@ void TSP(city* cityArray)
   openList->previousListItem = NULL;
   openList->nextListItem = NULL;
   openList->father = NULL;
+  openList->isFather = 0;
   //Lista cerrada
-  closedList  = NULL; //"lista cerrada vacia"
+  //closedList  = NULL; //"lista cerrada vacia"
   fatherNode = openList;
 
   //Salgo cuando lista esta vacia con error o encuentro GOAL
@@ -221,13 +224,13 @@ void TSP(city* cityArray)
     NA++;  //Contador de NODOS ABIERTOS
     fatherNode = openList; //father Node primer elemento de openlist
     currentNode = fatherNode;//currentNode para recorrer el camino de parents
-
+    
     ////////BUSCAMOS CAMINO RECORRIDO SIGUIENDO LOS NODOS FATHER
     ////////////////////
     depth = 0; //reseteo contador de profundidad (CIUDADES VISITADAS)
     path[depth] = currentNode->idCurrentCity; //Primer elemento de camino es ciudad actual
     depth++;
-    int histogram[cityNum];
+    
     for(int i = 0; i < cityNum; i++)
     {
       histogram[i] = 0;
@@ -245,8 +248,7 @@ void TSP(city* cityArray)
       {
         histogram[path[i]] = 1;
       }
-    ////////////////////
-
+    ////////////////////    
     if(openList->idCurrentCity == startNode && depth > 1) // Encontre GOAL!!!!
       {
 #ifdef DEBUG
@@ -266,25 +268,47 @@ void TSP(city* cityArray)
           }
         printf("\nTotal COST = %d\n",openList->cost);
         printf("Nodos Abiertos: %d\n",NA);
-        int selectedDepth = 2;
-        printf("Listas de profundidad %d:\n", selectedDepth);
-        depthNode* currDepthListItem = depthList[selectedDepth];
-        if(currDepthListItem != NULL)
-        while(currDepthListItem->nextDepthNode)
-        {
-          listNode* aux = currDepthListItem->node;
-          while(aux != NULL)
+        /* for(int selectedDepth = 0; selectedDepth < cityNum-1; selectedDepth++) */
+        /*   { */
+        /*     printf("Listas de profundidad %d:\n", selectedDepth); */
+        /*     depthNode* currDepthListItem = depthList[selectedDepth]; */
+        /*     if(currDepthListItem != NULL) */
+        /*       { */
+        /*       while(currDepthListItem->nextDepthNode) */
+        /*         { */
+        /*           listNode* aux = currDepthListItem->node; */
+        /*           printf("Listas de profundidad %d:\n", selectedDepth); */
+        /*           while(aux != NULL) */
+        /*             { */
+        /*               printf("%d;", aux->idCurrentCity); */
+        /*               aux = aux->father; */
+        /*             } */
+        /*           printf("\n"); */
+        /*           currDepthListItem = currDepthListItem->nextDepthNode; */
+        /*         } */
+        /*       } */
+        /*   } */
+        for(int selectedDepth = 0; selectedDepth <cityNum-1; selectedDepth++)
           {
-            printf("%d;", aux->idCurrentCity);
-            aux = aux->father;
+            depthNode* currDepthListItem = depthList[selectedDepth];
+            if(currDepthListItem)
+              {
+                if(currDepthListItem->nextDepthNode)
+                  while(currDepthListItem->nextDepthNode)
+                    {
+                      currDepthListItem = currDepthListItem->nextDepthNode;
+                      free(currDepthListItem->previousDepthNode);
+                    }
+                free(currDepthListItem);
+              }
           }
-          printf("\n");
-          currDepthListItem = currDepthListItem->nextDepthNode;
-        }
-
         //Liberar memoria
         freeMemory(openList);
         freeMemory(closedList);
+        if(ghostList)
+          {
+            freeMemory(ghostList);
+          }
         return;
       }
     //////////////////// SI NO ES NODO GOAL ABRIMOS, INCLUIMOS NUEVOS NODOS EN ORDEN ////////////////////////////////////////
@@ -294,7 +318,7 @@ void TSP(city* cityArray)
         Node = startNode;
         if(fatherNode->idCurrentCity < Node)
           Node -= 1;
-        addNode(cityArray,Node,fatherNode, minimumDistancesArray, depth, histogram, depthList);
+        addNode(cityArray,Node,fatherNode, minimumDistancesArray, depth, histogram, depthList,& ghostList);
 
       }
     else //Si no estoy en el ultimo nodo agrego todas las ciudades no visitadas.
@@ -312,13 +336,13 @@ void TSP(city* cityArray)
               }
             if (!cityFlag) //Si no esta en el camino recorrido agrego el nodo
               {
-                addNode(cityArray,j,fatherNode, minimumDistancesArray, depth, histogram, depthList);
+                addNode(cityArray,j,fatherNode, minimumDistancesArray, depth, histogram, depthList, &ghostList);
               }
             cityFlag = 0;
           }
       }
     ////////////////////////////////////////////////////////////////////////////////
-
+    
     ////// SACAMOS NODO ABIERTO DE LISTA ABIERTA Y LO PASAMOS A FINAL DE LISTA CERRADA //////
     openList = fatherNode->nextListItem; //Cambio primer item de lista abierta
     openList->previousListItem = NULL;
@@ -338,7 +362,6 @@ void TSP(city* cityArray)
       }
     fatherNode->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null
     ////////////////////////////////////////////////////////////////////////////////
-
     //printf("------------------------------------------------------\n\n");
     //printf("---------Open List Desordenada nivel %d----------------\n",i+1);
     //printList(openList);
@@ -405,91 +428,103 @@ void printList(listNode* a)
  *
  * @return 	NONE
  --------------------------------------------------------------------------------*/
-void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth, int* histogram, depthNode** depthList)
+void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth, int* histogram, depthNode** depthList, listNode** ghostList)
 {
-  printf("Creando Nodo\n");
   listNode *pivotNode = fatherNode;
   listNode *prevNode = NULL;
   listNode *auxNode;
   int histogram2[cityNum];
-  for(int i = 0; i < cityNum; i++)
-  {
-    histogram2[i] = 0;
-  }
   int costToMe = cityArray[fatherNode->idCurrentCity].distance[j];
   int currentCity = cityArray[fatherNode->idCurrentCity].nextCity[j];
   int currentCost = fatherNode->cost + costToMe;
-  depthNode* currDepthListItem = depthList[depth];
-  printf("Recorriendo Listas de Nivel\n");
-  while(NULL != currDepthListItem)
+  depthNode* currDepthListItem = depthList[depth-1];
+  
+  while(currDepthListItem) // Mientras haya algun item en la lista para comparar entro
   {
-    if(currDepthListItem->node->idCurrentCity == currentCity)
+      
+    if(currDepthListItem->node->idCurrentCity == currentCity) //Busco coincidencia con ciudad actual
     {
-      auxNode = currDepthListItem->node->father;
-      while(NULL != auxNode)
+      for(int i = 0; i < cityNum; i++) //Limpio el histograma
+        {
+          histogram2[i] = 0;
+        }
+      
+      auxNode = currDepthListItem->node->father; //Empiezo a armar el camino partiendo del padre
+      
+      while(auxNode)
       {
         histogram2[auxNode->idCurrentCity] = 1;
         auxNode = auxNode->father;
       }
 
-      printf("\nHistograma 1: ");
-      for(int i = 0; i < cityNum; i++)
-      {
-        printf("%d ", histogram[i]);
-      }
-      printf("\nHistograma 2: ");
-      for(int i = 0; i < cityNum; i++)
-      {
-        printf("%d ", histogram2[i]);
-      }
-      printf("\n");
-      int flagDif = 0;
+      int flagDif = 0; // Reseteo flag de coincidencia de caminos recorridos 
 
       for(int i = 0; i < cityNum; i++)
-      {
-        if(histogram[i] - histogram2[i] != 0)
-          flagDif++;
-      }
-      //printf("flagDif: %d\n", flagDif);
-      if(flagDif == 0) //llegué a un path que termina en la misma ciudad y compuesto por las mismas ciudades
-      {
-        printf("Match de Caminos a profundidad %d!\n", depth);
-        if(currentCost < currDepthListItem->node->cost) // Si encontré un mejor camino bajo estas condiciones, borro el anterior.
         {
-          listNode* nodeToDelete = currDepthListItem->node;
-          // Borro de la lista abierta.
-          if(nodeToDelete->previousListItem) // si no estoy en el primer elemento
-          {
-            nodeToDelete->previousListItem->nextListItem = nodeToDelete->nextListItem;
-          }
-          if(nodeToDelete->nextListItem)
-            nodeToDelete->nextListItem->previousListItem = nodeToDelete->previousListItem;
-          // Borro de las listas de nivel.
-          if(currDepthListItem->previousDepthNode) // si no estoy en el primer elemento
-          {
-            currDepthListItem->previousDepthNode->nextDepthNode = currDepthListItem->nextDepthNode;
-          }else
-          {
-            printf("Reemplazando primer elemento\n");
-            depthList[depth] = currDepthListItem->nextDepthNode;
-          }
-          if(currDepthListItem->nextDepthNode)
-            currDepthListItem->nextDepthNode->previousDepthNode = currDepthListItem->previousDepthNode;
-          free(currDepthListItem);
-          free(nodeToDelete);
-          printf("Te ahorré un nodo!\n");
-          break;
-        }else
-        {
-          printf("Nuevo nodo descartado!\n");
-          return; // Si el costo actual es mayor a uno que tiene el mismo camino, ni lo agrego.
+          if(histogram[i] - histogram2[i] != 0)
+            {
+              flagDif++;  //Si hay diferencia en el camino recorrido incremento el flag y salgo
+              break;
+            }
         }
-      }
+       
+      if(!flagDif) //llegué a un path que termina en la misma ciudad y compuesto por las mismas ciudades
+        {
+          if(currentCost < currDepthListItem->node->cost) // Si encontré un mejor camino bajo estas condiciones, borro el anterior.
+            {
+              listNode* nodeToDelete = currDepthListItem->node;
+              // Borro de la lista abierta.
+              if(nodeToDelete->previousListItem) // si no estoy en el primer elemento
+                {
+                  nodeToDelete->previousListItem->nextListItem = nodeToDelete->nextListItem;
+                }
+              if(nodeToDelete->nextListItem)
+                nodeToDelete->nextListItem->previousListItem = nodeToDelete->previousListItem;
+              // Borro de las listas de nivel.
+              if(currDepthListItem->previousDepthNode) // si no estoy en el primer elemento
+                {
+                  currDepthListItem->previousDepthNode->nextDepthNode = currDepthListItem->nextDepthNode;
+                }else
+                {
+                  depthList[depth-1] = currDepthListItem->nextDepthNode;
+                }
+              if(currDepthListItem->nextDepthNode)
+                currDepthListItem->nextDepthNode->previousDepthNode = currDepthListItem->previousDepthNode;
+              free(currDepthListItem);
+              if(!nodeToDelete->isFather)
+                {
+                  free(nodeToDelete);
+                }
+              else
+                {
+                  listNode* ghostNode = nodeToDelete;
+                  if(*ghostList)
+                    {
+                      while(ghostNode->nextListItem)
+                        {
+                          ghostNode  = ghostNode->nextListItem;
+                        }
+                      ghostNode->nextListItem = nodeToDelete;
+                      nodeToDelete->previousListItem = ghostNode;
+                    }
+                  else //Si no hay ningun nodo en Lista CERRADA
+                    {
+                      *ghostList = nodeToDelete;
+                      nodeToDelete->previousListItem = NULL;
+                    }
+                  nodeToDelete->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null
+                }
+              break;
+            }else
+            {
+              return; // Si el costo actual es mayor a uno que tiene el mismo camino, ni lo agrego.
+            }
+        }
     }
     currDepthListItem = currDepthListItem->nextDepthNode;
   }
 
-  listNode* currentNode = malloc(sizeof(listNode));
+  listNode* currentNode =(listNode*) malloc(sizeof(listNode));
   currentNode->   idCurrentCity     = currentCity;
   currentNode->   cost              = currentCost;
 #ifdef HEURISTICS_ON
@@ -505,52 +540,52 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
   // Si esta bien calculada h esto no deberia que chequearlo.
   if (currentNode->heuristic < 0) //La heuristica tiene que ser siempre >= 0
     currentNode->heuristic = 0;
+  currentNode->   isFather          = 0;
   currentNode->   father            = fatherNode;
+  fatherNode->    isFather          = 1;
   currentCost = currentNode->cost + currentNode->heuristic;
   while(pivotNode->nextListItem)//Recorro la lista hasta encontrar el lugar donde insertar el nodo
-  {
-    if(currentCost < (pivotNode->cost+pivotNode->heuristic)) //Tengo que insertar el nodo antes
     {
-      currentNode->   previousListItem  = pivotNode->previousListItem;
-      prevNode                          = pivotNode->previousListItem;
-      if(prevNode)
-        prevNode->    nextListItem      = currentNode;
-      currentNode->   nextListItem      = pivotNode;
-      pivotNode->     previousListItem  = currentNode;
-      break;
+      if(currentCost < (pivotNode->cost+pivotNode->heuristic)) //Tengo que insertar el nodo antes
+        {
+          currentNode->   previousListItem  = pivotNode->previousListItem;
+          prevNode                          = pivotNode->previousListItem;
+          if(prevNode)
+            prevNode->    nextListItem      = currentNode;
+          currentNode->   nextListItem      = pivotNode;
+          pivotNode->     previousListItem  = currentNode;
+          break;
+        }
+      pivotNode = pivotNode->nextListItem;
     }
-    pivotNode = pivotNode->nextListItem;
-  }
   if(!pivotNode->nextListItem) //Llegue al final de la lista
-  {
-    currentNode->   previousListItem  = pivotNode;
-    currentNode->   nextListItem      = NULL;
-    pivotNode->     nextListItem      = currentNode;
-  }
-  // Agrego el nodo actual a la lista de profundidades para comparar a futuro
-  printf("Creando item en lista de profundidad\n");
-  if(depthList[depth] == NULL) // Primer camino con esta profundidades
-  {
-    printf("Inaugurando lista de nivel %d\n", depth);
-    depthList[depth] = malloc(sizeof(depthNode));
-    depthList[depth]->previousDepthNode = NULL;
-    depthList[depth]->nextDepthNode = NULL;
-    depthList[depth]->node = currentNode;
-  }else // si ya habían nodos con esta produndidad, lo agrego al final.
-  {
-    printf("Agregando item a lista de nivel %d\n", depth);
-    currDepthListItem = depthList[depth];
-    while(currDepthListItem->nextDepthNode)
-      currDepthListItem = currDepthListItem->nextDepthNode;
-    currDepthListItem->nextDepthNode = malloc(sizeof(depthNode));
-    currDepthListItem->nextDepthNode->previousDepthNode = currDepthListItem;
-    currDepthListItem = currDepthListItem->nextDepthNode;
-    currDepthListItem->nextDepthNode = NULL;
-    currDepthListItem->node = currentNode;
-    printf("Logrado\n");
-  }
-  return;
+    {
 
+      currentNode->   previousListItem  = pivotNode;
+      currentNode->   nextListItem      = NULL;
+      pivotNode->     nextListItem      = currentNode;
+    }
+  // Agrego el nodo actual a la lista de profundidades para comparar a futuro
+  if(depthList[depth-1] == NULL) // Primer camino con esta profundidades
+    {
+      //printf("Inaugurando lista de nivel %d\n", depth);
+      depthNode * newDepthNode = (depthNode*)malloc(sizeof(depthNode));
+      depthList[depth-1] = newDepthNode;
+      newDepthNode->previousDepthNode = NULL;
+      newDepthNode->nextDepthNode = NULL;
+      newDepthNode->node = currentNode;
+    }else // si ya habían nodos con esta produndidad, lo agrego al final.
+    {
+      currDepthListItem = depthList[depth-1];
+      while(currDepthListItem->nextDepthNode)
+        currDepthListItem = currDepthListItem->nextDepthNode;
+      depthNode* newDepthNode = (depthNode*)malloc(sizeof(depthNode));
+      newDepthNode->nextDepthNode = NULL;
+      newDepthNode->previousDepthNode = currDepthListItem;
+      newDepthNode->node = currentNode;
+      currDepthListItem->nextDepthNode = newDepthNode;
+    }
+  return;
 }
 
 
