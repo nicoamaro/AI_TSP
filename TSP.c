@@ -14,7 +14,7 @@ int cityNum;
 int main(int argc, char* argv[])
 {
   FILE *importFile;
-  char importText[1024];
+  char importText[1024*8];
   int len;
   char* delimiter;
 
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
   printf("%d\n", cityNum);
   city cityArray[cityNum];
   initializeCity(cityArray);
-  fgets(importText, 1024, importFile);
+  fgets(importText, 1024*8, importFile);
   populateCity(cityArray, importText);
   TSP(cityArray);
   clock_t endTime = clock();
@@ -141,7 +141,6 @@ void populateCity(city* cityArray, char* data)
       *delimiter = '\0';
       distances = atoi(data);
       data = delimiter + 1;
-
       cityArray[i].distance[j-1] = distances;
       cityArray[i].nextCity[j-1] = j;
 
@@ -182,17 +181,16 @@ void TSP(city* cityArray)
   listNode* openList;
   listNode* closedList = NULL;
   listNode* fatherNode;
-  listNode* ghostList = NULL;
   depthNode* depthList[cityNum];
 
   for(int i = 0; i < cityNum; i++) // inicializo mis listas de profundidad
     depthList[i] = NULL;
 
-  int path[cityNum+1]; //reservo un vector para guardar el camino recorrido
-  int histogram[cityNum];
-  //Generar vector de distancias minimas
-  int minimumDistancesArray[cityNum];
-  int minDistance = findMinimumDistances(cityArray, minimumDistancesArray);
+  int path[cityNum+1]; //Reservo un vector para guardar el camino recorrido
+  int histogram[cityNum]; //Usamos un histograma para hacer comparacion rapida de caminos 
+  int minimumDistancesArray[cityNum];//Generar vector de distancias minimas
+  int minDistance = findMinimumDistances(cityArray, minimumDistancesArray); //Hallamos h[0] y llenamos minimumDistanesArray con la segunda menor distancia de cada ciudad
+  printf("Distancia minima = %d\n",minDistance);
 #ifdef DEBUG
   printf("Distancia minima = %d\n",minDistance);
   printf("START NODE = %d\n",cityArray[startNode].id);
@@ -214,10 +212,8 @@ void TSP(city* cityArray)
   openList->nextListItem = NULL;
   openList->father = NULL;
   openList->isFather = 0;
-  //Lista cerrada
-  //closedList  = NULL; //"lista cerrada vacia"
-  fatherNode = openList;
 
+  closedList = NULL;
   //Salgo cuando lista esta vacia con error o encuentro GOAL
   while(openList)
   {
@@ -254,10 +250,10 @@ void TSP(city* cityArray)
 #ifdef DEBUG
         printf("\n\n************************* GOAL  ******************************************\n\n");
         printf("------------------------------------------------------\n\n");
-        printf("---------Open List Desordenada nivel %d----------------\n",NA);
+        printf("--------------- Open List ---------------\n");
         printList(openList);
         printf("------------------------------------------------------\n\n");
-        printf("---------Closed  List Desordenada nivel %d----------------\n",NA);
+        printf("--------------- Closed  List ---------------\n");
         printList(closedList);
 #endif
         printf("\nPath: ");
@@ -268,26 +264,8 @@ void TSP(city* cityArray)
           }
         printf("\nTotal COST = %d\n",openList->cost);
         printf("Nodos Abiertos: %d\n",NA);
-        /* for(int selectedDepth = 0; selectedDepth < cityNum-1; selectedDepth++) */
-        /*   { */
-        /*     printf("Listas de profundidad %d:\n", selectedDepth); */
-        /*     depthNode* currDepthListItem = depthList[selectedDepth]; */
-        /*     if(currDepthListItem != NULL) */
-        /*       { */
-        /*       while(currDepthListItem->nextDepthNode) */
-        /*         { */
-        /*           listNode* aux = currDepthListItem->node; */
-        /*           printf("Listas de profundidad %d:\n", selectedDepth); */
-        /*           while(aux != NULL) */
-        /*             { */
-        /*               printf("%d;", aux->idCurrentCity); */
-        /*               aux = aux->father; */
-        /*             } */
-        /*           printf("\n"); */
-        /*           currDepthListItem = currDepthListItem->nextDepthNode; */
-        /*         } */
-        /*       } */
-        /*   } */
+
+        //Liberamos memoria
         for(int selectedDepth = 0; selectedDepth <cityNum-1; selectedDepth++)
           {
             depthNode* currDepthListItem = depthList[selectedDepth];
@@ -302,15 +280,11 @@ void TSP(city* cityArray)
                 free(currDepthListItem);
               }
           }
-        //Liberar memoria
         freeMemory(openList);
         freeMemory(closedList);
-        if(ghostList)
-          {
-            freeMemory(ghostList);
-          }
         return;
       }
+    
     //////////////////// SI NO ES NODO GOAL ABRIMOS, INCLUIMOS NUEVOS NODOS EN ORDEN ////////////////////////////////////////
 
     if(depth == cityNum)//Si estoy en el ultimo nodo agrego solo el nodo GOAL
@@ -318,7 +292,7 @@ void TSP(city* cityArray)
         Node = startNode;
         if(fatherNode->idCurrentCity < Node)
           Node -= 1;
-        addNode(cityArray,Node,fatherNode, minimumDistancesArray, depth, histogram, depthList,& ghostList);
+        addNode(cityArray,Node,fatherNode, minimumDistancesArray, depth, histogram, depthList);
 
       }
     else //Si no estoy en el ultimo nodo agrego todas las ciudades no visitadas.
@@ -336,7 +310,7 @@ void TSP(city* cityArray)
               }
             if (!cityFlag) //Si no esta en el camino recorrido agrego el nodo
               {
-                addNode(cityArray,j,fatherNode, minimumDistancesArray, depth, histogram, depthList, &ghostList);
+                addNode(cityArray,j,fatherNode, minimumDistancesArray, depth, histogram, depthList);
               }
             cityFlag = 0;
           }
@@ -346,7 +320,7 @@ void TSP(city* cityArray)
     ////// SACAMOS NODO ABIERTO DE LISTA ABIERTA Y LO PASAMOS A FINAL DE LISTA CERRADA //////
     openList = fatherNode->nextListItem; //Cambio primer item de lista abierta
     openList->previousListItem = NULL;
-    currentNode = closedList;
+    currentNode = closedList; //Me paro en el inicio de la lista cerrada
     if(closedList)
       {
         while(currentNode->nextListItem)
@@ -360,26 +334,7 @@ void TSP(city* cityArray)
       {
         closedList = fatherNode;
       }
-    fatherNode->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null
-    ////////////////////////////////////////////////////////////////////////////////
-    //printf("------------------------------------------------------\n\n");
-    //printf("---------Open List Desordenada nivel %d----------------\n",i+1);
-    //printList(openList);
-    //printf("------------------------------------------------------\n\n");
-    //printf("-----------Open List Ordenada nivel %d-----------------\n",i+1);
-    //    reordenarOpenList(openList);
-    //printList(openList);
-    //printf("------------------------------------------------------\n\n");
-    //printf("-----------Open List Ordenada y Tachada nivel %d-------\n",i+1);
-    //    tacharRepetidos(openList);
-    //printList(openList);
-    //printf("------------------------------------------------------\n\n");
-    //Termine de armar la lista de este nivel
-    //Cierro el nodo que se expandio
-    //printf("-------------Closed List nivel %d----------------------\n",i+1);
-    //printList(closedList);
-    //printf("------------------------------------------------------\n\n");
-    //i++;
+    fatherNode->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null  
   }
 
   //SI SALGO DEL WHILE POR ACA NO ENCONTRE EL GOAL!!!!!!
@@ -419,16 +374,18 @@ void printList(listNode* a)
  *
  * @brief       Agrega un nodo a la lista en orden dependiendo del costo total.
  *
- * @param[in]   listNode* currentNode - Direccion de nodo actual a agregar.
  * @param[in]	city* cityArray	- Array que contiene la info de todas las ciudades.
  * @param[in]   int  j          - Indice de ciudad actual en array para el nodo padre.
  * @param[in]	listNode* fatherNode  - Direccion de nodo padre.
  * @param[in]   int* dist       - Direccion de vector de distancias minimas.
+ * @param[in]   int* depth      - Profundidad del nodo a abrir.
+ * @param[in]   int* histogram  - Histograma de ciudades recorridas por el nodo a abrir.
+ * @param[in]   depthNode** dephtList    - Puntero a vector de listas de profundidad.
  *
  *
  * @return 	NONE
  --------------------------------------------------------------------------------*/
-void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth, int* histogram, depthNode** depthList, listNode** ghostList)
+void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth, int* histogram, depthNode** depthList)
 {
   listNode *pivotNode = fatherNode;
   listNode *prevNode = NULL;
@@ -468,7 +425,7 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
             }
         }
        
-      if(!flagDif) //llegué a un path que termina en la misma ciudad y compuesto por las mismas ciudades
+      if(!flagDif) //llegué a un path que termina en la ciudad a abrir y compuesto por las mismas ciudades
         {
           if(currentCost < currDepthListItem->node->cost) // Si encontré un mejor camino bajo estas condiciones, borro el anterior.
             {
@@ -491,39 +448,20 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
               if(currDepthListItem->nextDepthNode)
                 currDepthListItem->nextDepthNode->previousDepthNode = currDepthListItem->previousDepthNode;
               free(currDepthListItem);
-              if(!nodeToDelete->isFather)
+              if(!nodeToDelete->isFather) //Si el nodo a borrar esta en la lista abierta
                 {
                   free(nodeToDelete);
-                }
-              else
-                {
-                  listNode* ghostNode = nodeToDelete;
-                  if(*ghostList)
-                    {
-                      while(ghostNode->nextListItem)
-                        {
-                          ghostNode  = ghostNode->nextListItem;
-                        }
-                      ghostNode->nextListItem = nodeToDelete;
-                      nodeToDelete->previousListItem = ghostNode;
-                    }
-                  else //Si no hay ningun nodo en Lista CERRADA
-                    {
-                      *ghostList = nodeToDelete;
-                      nodeToDelete->previousListItem = NULL;
-                    }
-                  nodeToDelete->nextListItem = NULL; // Apunto en ultimo nodo agregado de cerrada a null
-                }
+                }          
               break;
             }else
             {
-              return; // Si el costo actual es mayor a uno que tiene el mismo camino, ni lo agrego.
+              return; // Si el costo actual es mayor a uno que tiene el mismo camino, no lo agrego.
             }
         }
     }
     currDepthListItem = currDepthListItem->nextDepthNode;
-  }
-
+  } 
+  // Si nunca explore el camino o el camino explorado era de mayor costo. Agrego nuevo Nodo a la lista abierta.
   listNode* currentNode =(listNode*) malloc(sizeof(listNode));
   currentNode->   idCurrentCity     = currentCity;
   currentNode->   cost              = currentCost;
@@ -568,7 +506,6 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
   // Agrego el nodo actual a la lista de profundidades para comparar a futuro
   if(depthList[depth-1] == NULL) // Primer camino con esta profundidades
     {
-      //printf("Inaugurando lista de nivel %d\n", depth);
       depthNode * newDepthNode = (depthNode*)malloc(sizeof(depthNode));
       depthList[depth-1] = newDepthNode;
       newDepthNode->previousDepthNode = NULL;
@@ -605,10 +542,7 @@ void freeMemory(listNode* a)
   while(a->nextListItem)
     {
       a = a->nextListItem;
-      if (a->previousListItem) //Necesario?
-        {
-          free(a->previousListItem);
-        }
+      free(a->previousListItem);
     }
   free(a);
 }
