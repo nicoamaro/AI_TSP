@@ -192,9 +192,8 @@ void TSP(city* cityArray)
   int minDistance = findMinimumDistances(cityArray, minimumDistancesArray); //Hallamos h[0] y llenamos minimumDistanesArray con la segunda menor distancia de cada ciudad
   printf("Distancia minima = %d\n",minDistance);
 #ifdef DEBUG
-  printf("Distancia minima = %d\n",minDistance);
-  printf("START NODE = %d\n",cityArray[startNode].id);
-#endif
+   printf("START NODE = %d\n",cityArray[startNode].id);
+#endif //DEBUG
 
   //Empiezo con el primer nodo
   //Configuro el primer nodo Lista abierta
@@ -206,7 +205,7 @@ void TSP(city* cityArray)
   openList->heuristic = minDistance;
 #else
   openList->heuristic = 0;
-#endif
+#endif //HEURISTICS_ON
 
   openList->previousListItem = NULL;
   openList->nextListItem = NULL;
@@ -220,30 +219,32 @@ void TSP(city* cityArray)
     NA++;  //Contador de NODOS ABIERTOS
     fatherNode = openList; //father Node primer elemento de openlist
     currentNode = fatherNode;//currentNode para recorrer el camino de parents
-    
     ////////BUSCAMOS CAMINO RECORRIDO SIGUIENDO LOS NODOS FATHER
     ////////////////////
+    for(int i = 0; i < cityNum; i++) // reseteo histograma
+      {
+        histogram[i] = 0;
+      }
     depth = 0; //reseteo contador de profundidad (CIUDADES VISITADAS)
     path[depth] = currentNode->idCurrentCity; //Primer elemento de camino es ciudad actual
+    histogram[currentNode->idCurrentCity] = 1;
     depth++;
     
-    for(int i = 0; i < cityNum; i++)
-    {
-      histogram[i] = 0;
-    }
     while(currentNode)
       {
         if (currentNode->father)
           {
             path[depth] = currentNode->father->idCurrentCity; //Guardo la ciudad visitada
+            histogram[currentNode->father->idCurrentCity] = 1;
             depth++;
           }
         currentNode = currentNode->father;//Paso un nivel mas arriba
       }
-      for(int i = 0; i < depth; i++) // ignoro
-      {
-        histogram[path[i]] = 1;
-      }
+      /* for(int i = 0; i < depth; i++) // ignoro */
+      /* { */
+      /*   histogram[path[i]] = 1; */
+      /* } */
+
     ////////////////////    
     if(openList->idCurrentCity == startNode && depth > 1) // Encontre GOAL!!!!
       {
@@ -255,7 +256,7 @@ void TSP(city* cityArray)
         printf("------------------------------------------------------\n\n");
         printf("--------------- Closed  List ---------------\n");
         printList(closedList);
-#endif
+#endif //DEBUG
         printf("\nPath: ");
         while(depth)
           {
@@ -266,6 +267,7 @@ void TSP(city* cityArray)
         printf("Nodos Abiertos: %d\n",NA);
 
         //Liberamos memoria
+#ifdef NO_REPETIDOS        
         for(int selectedDepth = 0; selectedDepth <cityNum-1; selectedDepth++)
           {
             depthNode* currDepthListItem = depthList[selectedDepth];
@@ -280,6 +282,7 @@ void TSP(city* cityArray)
                 free(currDepthListItem);
               }
           }
+#endif  //NO_REPETIDOS
         freeMemory(openList);
         freeMemory(closedList);
         return;
@@ -394,6 +397,7 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
   int costToMe = cityArray[fatherNode->idCurrentCity].distance[j];
   int currentCity = cityArray[fatherNode->idCurrentCity].nextCity[j];
   int currentCost = fatherNode->cost + costToMe;
+#ifdef NO_REPETIDOS
   depthNode* currDepthListItem = depthList[depth-1];
   
   while(currDepthListItem) // Mientras haya algun item en la lista para comparar entro
@@ -460,22 +464,25 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
         }
     }
     currDepthListItem = currDepthListItem->nextDepthNode;
-  } 
+  }
+#endif //NO_REPETIDOS
+  
   // Si nunca explore el camino o el camino explorado era de mayor costo. Agrego nuevo Nodo a la lista abierta.
   listNode* currentNode =(listNode*) malloc(sizeof(listNode));
   currentNode->   idCurrentCity     = currentCity;
   currentNode->   cost              = currentCost;
 #ifdef HEURISTICS_ON
-  // h[n] = h[n-1] - dist(min2)[currentCity] + |dist(n-1 a n) - dist(min2)[currentCity]|
-  int h0 = fatherNode->heuristic - dist[currentNode->idCurrentCity];
-  int h1 = costToMe - dist[currentNode->idCurrentCity];
-  if (h1 < 0)
-    h1 = -h1;
-  currentNode->heuristic = h0+h1;
+  // h[n] = h[n-1] - costToMe
+  //Si X = costToMe - (dist[currentNode->idCurrentCity] + dist[fatherNode->idCurrentCity])/2  es positivo.
+  //h[n] = h[n-1] - costToMe + X
+  currentNode->heuristic = fatherNode->heuristic - costToMe;
+  int h1 = costToMe - (dist[currentNode->idCurrentCity] + dist[fatherNode->idCurrentCity])/2 ;
+  if (h1>0)
+    currentNode->heuristic += h1;
 #else
   currentNode->   heuristic         = 0;
-#endif
-  // Si esta bien calculada h esto no deberia que chequearlo.
+#endif //HEURISTICS_ON
+  
   if (currentNode->heuristic < 0) //La heuristica tiene que ser siempre >= 0
     currentNode->heuristic = 0;
   currentNode->   isFather          = 0;
@@ -503,6 +510,7 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
       currentNode->   nextListItem      = NULL;
       pivotNode->     nextListItem      = currentNode;
     }
+#ifdef  NO_REPETIDOS
   // Agrego el nodo actual a la lista de profundidades para comparar a futuro
   if(depthList[depth-1] == NULL) // Primer camino con esta profundidades
     {
@@ -522,6 +530,7 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
       newDepthNode->node = currentNode;
       currDepthListItem->nextDepthNode = newDepthNode;
     }
+#endif  //NO_REPETIDOS
   return;
 }
 

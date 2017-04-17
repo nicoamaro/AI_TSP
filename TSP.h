@@ -14,29 +14,30 @@
 /* Defines */
 #define HEURISTICS_ON  //Para implementar heuristica
 //#define DEBUG  //Para imprimir LISTAS ABIERTA y CERRADA y otra info
+#define NO_REPETIDOS //Si esta activo no agrega Nodos de estados repetidos
 
 /* Variable type Declarations */
 typedef struct {
-  int id;
-  int* nextCity;
-  int* distance;
+  int id;           // ID de la ciudad
+  int* nextCity;    // Puntero al vector de ciudades conectadas
+  int* distance;    // Puntero al vector con distancia entre ciudades conectadas
 }city;
 
 typedef struct listNode{
-  int idCurrentCity;
-  int cost;
-  int heuristic;
-  int isFather;
-  struct listNode*  father;
+  int idCurrentCity;  // ID de la ciudad
+  int cost;           // Costo recorrido igual a g[n]
+  int heuristic;      // Valor estimado que falta hasta la meta h[n]
+  int isFather;       // isFather = 1 si el nodo fue abierto y tiene hijos, isFather = 0 otherwise
+  struct listNode*  father; //Puntero a Nodo padre
 
-  struct listNode* nextListItem;
-  struct listNode* previousListItem;
+  struct listNode* nextListItem;     // Puntero a siguiente item en la lista
+  struct listNode* previousListItem; // Puntero a item anterior en la lista
 }listNode;
 
 typedef struct depthNode{
-  struct listNode* node;
-  struct depthNode* nextDepthNode;
-  struct depthNode* previousDepthNode;
+  struct listNode* node;                // Puntero a Nodo 
+  struct depthNode* nextDepthNode;      // Puntero a siguiente item en la lista
+  struct depthNode* previousDepthNode;  // Puntero a item anterior en la lista
 }depthNode;
 
 
