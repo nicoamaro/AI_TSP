@@ -90,6 +90,8 @@ int findMinimumDistances(city* cityArray, int* dist)
   return (distance);
 }
 
+
+
 /*--------------------------------------------------------------------------------
  * Function:    initializeCity
  *
@@ -176,7 +178,7 @@ void populateCity(city* cityArray, char* data)
  --------------------------------------------------------------------------------*/
 void TSP(city* cityArray)
 {
-  int startNode = 3, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
+  int startNode = 0, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
   listNode* currentNode;
   listNode* openList;
   listNode* closedList = NULL;
@@ -303,15 +305,7 @@ void TSP(city* cityArray)
         for(int j = 0; j < cityNum -1; j++)
           {
             currentCity = cityArray[fatherNode->idCurrentCity].nextCity[j];
-            for(int k = 0; k < depth; k++)
-              {
-                if (currentCity == path[k])
-                  {
-                    cityFlag = 1;
-                    break;
-                  }
-              }
-            if (!cityFlag) //Si no esta en el camino recorrido agrego el nodo
+            if (!histogram[currentCity]) //Si no esta en el camino recorrido agrego el nodo
               {
                 addNode(cityArray,j,fatherNode, minimumDistancesArray, depth, histogram, depthList);
               }
