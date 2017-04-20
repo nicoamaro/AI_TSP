@@ -10,6 +10,7 @@
 #include "TSP.h"
 
 int cityNum;
+int startNode =0;
 
 int main(int argc, char* argv[])
 {
@@ -90,6 +91,106 @@ int findMinimumDistances(city* cityArray, int* dist)
   return (distance);
 }
 
+/*--------------------------------------------------------------------------------
+ * Function:    findMinimumDistances2
+ *
+ * @brief       Calcula la distancia minima como la suma de los promedios de
+ *              las 2 distancias minimas de cada ciudad que falta recorrer.
+ *
+ * @param[in]	city* cityArray	- Array que contiene la info de todas las ciudades.
+ * @param[in]	int depth       - Cantidad de ciudades visitadas.
+ * @param[in]   int currentCity - Ciudad Actual.
+ * @param[in]   int* histogram  - Histograma con ciudades visitadas.
+ *
+ *
+ * @return 	int distance    - Distancia minima calculada (h[n])
+ --------------------------------------------------------------------------------*/
+int findMinimumDistances2(city* cityArray, int depth, int currentCity, int* histogram)
+{
+  //return(0);
+  //printf("HOLA");
+  int distance = 0, i = 0,j = 0, k=0;
+  int min1, min2, min = 0;
+  //int hist[cityNum] = histogram;
+  if(depth < cityNum -1)
+    {
+      //  printf("entre");
+      histogram[startNode] = 0;
+      //printf("entre");
+      for(i = 0; i < cityNum; i++)
+        {
+          if (!histogram[i])
+            {
+              for(j = 0; j<cityNum; j++)
+                {
+                  if (!histogram[j] && j!=i)
+                    break;
+                }
+              if(i < j)
+                min2 = cityArray[i].distance[j-1];
+              else
+                min2 = cityArray[i].distance[j];
+              for(j = j; j<cityNum; j++)
+                {
+                  if (!histogram[j] && j!=i)
+                    break;
+                }
+              if(i < j)
+                {
+                  min1 = cityArray[i].distance[j-1];
+                  j = j-1;
+                }
+              else
+                min1 = cityArray[i].distance[j];
+              j = j+1;
+              while(j<cityNum)
+                {
+                  if(!histogram[j] && j!=i)
+                    {
+                      if( i < j)
+                        k = j-1;
+                      else
+                        k =j;
+                      if (min1 > cityArray[i].distance[k])
+                        {
+                          if(min2>min1)
+                            min2 = min1;
+                          min1 = cityArray[i].distance[k];
+                        }
+                      else
+                        if (min2 > cityArray[i].distance[k])
+                          min2 = cityArray[i].distance[k];
+                    }
+                  j++;
+                }
+              if( i == startNode || i == currentCity)
+                {
+                  if(min1<min2)
+                    min  += min1; // Guardo en el vector el segundo mas chico
+                  else
+                    min += min2;
+                  if(i >= startNode && i >= currentCity)
+                    distance += min/2; //Solo me quedar recorrer un camino por ciudad, uso los  minimos
+                }
+              else
+                distance += (min1+min2)/2; //Para la distancia uso el promedio de los dos minimos
+            }
+        }
+    }
+  else
+    {
+      if (depth == cityNum)
+        return (0);
+      else
+        {
+          if ( currentCity > startNode)
+            distance = cityArray[currentCity].distance[startNode];
+          else
+            distance = cityArray[currentCity].distance[startNode-1];
+        }
+    }
+  return (distance);
+}
 
 
 /*--------------------------------------------------------------------------------
@@ -178,7 +279,7 @@ void populateCity(city* cityArray, char* data)
  --------------------------------------------------------------------------------*/
 void TSP(city* cityArray)
 {
-  int startNode = 0, depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
+  int  depth=0, cityFlag=0, i=0, NA=0, Node=0, currentCity=0;
   listNode* currentNode;
   listNode* openList;
   listNode* closedList = NULL;
@@ -387,6 +488,8 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
   listNode *pivotNode = fatherNode;
   listNode *prevNode = NULL;
   listNode *auxNode;
+  city * city1 = cityArray;
+  int *hist = histogram;
   int histogram2[cityNum];
   int costToMe = cityArray[fatherNode->idCurrentCity].distance[j];
   int currentCity = cityArray[fatherNode->idCurrentCity].nextCity[j];
@@ -466,13 +569,10 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
   currentNode->   idCurrentCity     = currentCity;
   currentNode->   cost              = currentCost;
 #ifdef HEURISTICS_ON
-  // h[n] = h[n-1] - costToMe
-  //Si X = costToMe - (dist[currentNode->idCurrentCity] + dist[fatherNode->idCurrentCity])/2  es positivo.
-  //h[n] = h[n-1] - costToMe + X
   currentNode->heuristic = fatherNode->heuristic - costToMe;
-  int h1 = costToMe - (dist[currentNode->idCurrentCity] + dist[fatherNode->idCurrentCity])/2 ;
-  if (h1>0)
-    currentNode->heuristic += h1;
+  currentNode->heuristic = findMinimumDistances2(city1, depth, currentCity, hist);
+  if(fatherNode->heuristic > (currentNode->heuristic + costToMe))
+     currentNode->heuristic = fatherNode->heuristic - costToMe;
 #else
   currentNode->   heuristic         = 0;
 #endif //HEURISTICS_ON
