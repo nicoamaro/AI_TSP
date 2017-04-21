@@ -48,5 +48,4 @@ void TSP(city* cityArray);
 void printList(listNode* a);
 void addNode(city* cityArray, int j, listNode* fatherNode,  int* dist, int depth, int* histogram, depthNode** depthList);
 void freeMemory (listNode*a);
-int findMinimumDistances (city* cityArray, int* dist);
-int findMinimumDistances2(city* cityArray, int depth, int currentCity, int* histogram);
+int findMinimumDistances(city* cityArray, int depth, int currentCity, int* histogram);

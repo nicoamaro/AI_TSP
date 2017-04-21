@@ -45,54 +45,9 @@ int main(int argc, char* argv[])
   return 0;
 }
 
+
 /*--------------------------------------------------------------------------------
  * Function:    findMinimumDistances
- *
- * @brief       Calcula la distancia minima como la suma de los promedios de
- *              las 2 distancias minimas de cada ciudad.
- *
- * @param[in]	city* cityArray	- Array que contiene la info de todas las ciudades.
- * @param[in]	int* dist       - Direccion de vector donde se van a guardar las
- *                                segundas minimas distancias de cada ciudad.
- *
- *
- *
- * @return 	int distance    - Distancia minima calculada (h[0])
- --------------------------------------------------------------------------------*/
-int findMinimumDistances(city* cityArray, int* dist)
-{
-  int distance = 0, i = 0,j = 0;
-  int min1, min2;
-  for(i = 0; i < cityNum; i++)
-    {
-      min2 = cityArray[i].distance[0];
-      min1 = cityArray[i].distance[cityNum-2];
-      j = cityNum-3;
-      while(j)
-        {
-          if (min1 > cityArray[i].distance[j])
-            {
-              if(min2>min1)
-                min2 = min1;
-              min1 = cityArray[i].distance[j];
-            }
-          else
-            if (min2 > cityArray[i].distance[j])
-                min2 = cityArray[i].distance[j];
-          j--;
-        }
-
-      if(min1<min2)
-        dist[i] = min2; // Guardo en el vector el segundo mas chico
-      else
-        dist[i] = min1;
-      distance += (min1+min2)/2; //Para la distancia uso el promedio de los dos minimos
-    }
-  return (distance);
-}
-
-/*--------------------------------------------------------------------------------
- * Function:    findMinimumDistances2
  *
  * @brief       Calcula la distancia minima como la suma de los promedios de
  *              las 2 distancias minimas de cada ciudad que falta recorrer.
@@ -105,18 +60,14 @@ int findMinimumDistances(city* cityArray, int* dist)
  *
  * @return 	int distance    - Distancia minima calculada (h[n])
  --------------------------------------------------------------------------------*/
-int findMinimumDistances2(city* cityArray, int depth, int currentCity, int* histogram)
+int findMinimumDistances(city* cityArray, int depth, int currentCity, int* histogram)
 {
-  //return(0);
-  //printf("HOLA");
   int distance = 0, i = 0,j = 0, k=0;
   int min1, min2, min = 0;
-  //int hist[cityNum] = histogram;
+
   if(depth < cityNum -1)
     {
-      //  printf("entre");
       histogram[startNode] = 0;
-      //printf("entre");
       for(i = 0; i < cityNum; i++)
         {
           if (!histogram[i])
@@ -179,9 +130,9 @@ int findMinimumDistances2(city* cityArray, int depth, int currentCity, int* hist
     }
   else
     {
-      if (depth == cityNum)
+      if (depth == cityNum) //Si estoy en el ultimo nodo = GOAL
         return (0);
-      else
+      else                 //Estoy en la ultima ciudad antes del GOAL
         {
           if ( currentCity > startNode)
             distance = cityArray[currentCity].distance[startNode];
@@ -285,14 +236,19 @@ void TSP(city* cityArray)
   listNode* closedList = NULL;
   listNode* fatherNode;
   depthNode* depthList[cityNum];
-
-  for(int i = 0; i < cityNum; i++) // inicializo mis listas de profundidad
-    depthList[i] = NULL;
-
   int path[cityNum+1]; //Reservo un vector para guardar el camino recorrido
   int histogram[cityNum]; //Usamos un histograma para hacer comparacion rapida de caminos 
   int minimumDistancesArray[cityNum];//Generar vector de distancias minimas
-  int minDistance = findMinimumDistances(cityArray, minimumDistancesArray); //Hallamos h[0] y llenamos minimumDistanesArray con la segunda menor distancia de cada ciudad
+  
+  for(int i = 0; i < cityNum; i++) // Inicializo mis listas de profundidad
+    depthList[i] = NULL;
+
+  for(int i = 0; i < cityNum; i++) // Inicializo histograma
+    {
+      histogram[i] = 0;
+    }
+  
+  int minDistance = findMinimumDistances(cityArray, depth, startNode, histogram); //Hallamos h[0] y llenamos minimumDistanesArray con la segunda menor distancia de cada ciudad
   printf("Distancia minima = %d\n",minDistance);
 #ifdef DEBUG
    printf("START NODE = %d\n",cityArray[startNode].id);
@@ -488,7 +444,6 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
   listNode *pivotNode = fatherNode;
   listNode *prevNode = NULL;
   listNode *auxNode;
-  city * city1 = cityArray;
   int *hist = histogram;
   int histogram2[cityNum];
   int costToMe = cityArray[fatherNode->idCurrentCity].distance[j];
@@ -570,7 +525,7 @@ void addNode(city* cityArray, int j, listNode* fatherNode, int *dist, int depth,
   currentNode->   cost              = currentCost;
 #ifdef HEURISTICS_ON
   currentNode->heuristic = fatherNode->heuristic - costToMe;
-  currentNode->heuristic = findMinimumDistances2(city1, depth, currentCity, hist);
+  currentNode->heuristic = findMinimumDistances(cityArray, depth, currentCity, hist);
   if(fatherNode->heuristic > (currentNode->heuristic + costToMe))
      currentNode->heuristic = fatherNode->heuristic - costToMe;
 #else
